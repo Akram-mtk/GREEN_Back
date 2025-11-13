@@ -11,12 +11,13 @@ export class UserEntity implements Users{
     first_name: string;
     last_name: string;
     email: string;
-    password_hash: string;
     
     phone: string | null;
     is_active: boolean;
     created_at: Date;
     last_login: Date | null;
     updated_at: Date | null;
-
+    
+    @Exclude()
+    password_hash: string;
 }

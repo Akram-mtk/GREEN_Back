@@ -6,21 +6,21 @@ import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class UsersService {
 
-    constructor(private prisma: PrismaService){}
+  constructor(private prisma: PrismaService){}
 
 
-    async create(createUserDto: CreateUserDto){
-        return this.prisma.users.create({
-            data: createUserDto
-        })
-    }
+  async create(createUserDto: CreateUserDto){
+    return this.prisma.users.create({
+        data: createUserDto
+    })
+  }
 
-    async update(id: string, updateUserDto: UpdateUserDto){
-        return this.prisma.users.update({
-            where: { id },
-            data: updateUserDto
-        })
-    }
+  async update(id: string, updateUserDto: UpdateUserDto){
+    return this.prisma.users.update({
+        where: { id },
+        data: updateUserDto
+    })
+  }
 
     
 
