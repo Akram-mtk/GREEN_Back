@@ -20,13 +20,14 @@ model Users {
   updated_at    DateTime?   @default(now()) @db.DateTime2
 
   rfid_cards    RfidCards[]
+  soldPasses    Sold_Passes[]
 }
 
 model RfidCards {
   id           String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
   user_id      String?  @db.UniqueIdentifier
   hashed_uid   String   @unique
-  status       String   @default("issued")  // changed from enum to string
+  status       String   @default("issued")  
   issued_at    DateTime @default(now()) @db.DateTime2
   last_used_at DateTime? @db.DateTime2
 
@@ -34,31 +35,74 @@ model RfidCards {
 }
 
 
-model SeatCategories {
-  id          String  @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
-  name        String
-  description String?
 
-  seats       Seats[]
-}
-
-model Seats {
-  id          String  @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
-  section     String?
-  row         String?
-  number      String?
-  category_id String? @db.UniqueIdentifier
-
-  category    SeatCategories? @relation(fields: [category_id], references: [id])
-
-  @@unique([section, row, number])
-}
 
 model Gates {
+  id                    String                  @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  name                  String                  @unique
+  created_at            DateTime                @default(now()) @db.DateTime2
+
+  eventGateCapacities   EventGateCapacity[]
+}
+
+model event_types {
   id          String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
-  code        String   @unique
-  description String?
+  type_name   String   @unique
+
   created_at  DateTime @default(now()) @db.DateTime2
+}
+
+model Events {
+  id                    String                  @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  event_name            String
+  event_type            String
+  all_gate_entry        Boolean 
+  VIP_sells             Boolean
+  open_at               DateTime                @db.DateTime2
+  close_at              DateTime                @db.DateTime2
+  created_at            DateTime                @default(now()) @db.DateTime2
+
+  eventType             event_types             @relation(fields: [event_type], references: [id], onDelete: Cascade)
+  proposedPasses        Proposed_Passes[]
+  soldPasses            Sold_Passes[]
+  eventGateCapacities   EventGateCapacity[]
+}
+
+model EventGateCapacity {
+  id              String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  event_id        String   @db.UniqueIdentifier
+  gate_id         String   @db.UniqueIdentifier
+  available_seats Int
+  created_at      DateTime @default(now()) @db.DateTime2
+  updated_at      DateTime @updatedAt
+
+  event           Events   @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  gate            Gates    @relation(fields: [gate_id], references: [id], onDelete: Cascade)
+
+  @@unique([event_id, gate_id])
+}
+
+model Proposed_Passes {
+  id         String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  pass_type  String
+  price      Float
+  event_id   String   @db.UniqueIdentifier
+  created_at DateTime @default(now()) @db.DateTime2
+  available_seats Int
+
+  event      Events   @relation(fields: [event_id], references: [id], onDelete: Cascade)
+}
+
+model Sold_Passes {
+  id               String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  event_id         String   @db.UniqueIdentifier
+  user_id          String   @db.UniqueIdentifier
+  purchase_date    DateTime @default(now()) @db.DateTime2
+  entry_gate_id    String?  @db.UniqueIdentifier
+  is_used          Boolean  @default(false)
+
+  event      Events   @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  user       Users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
 
