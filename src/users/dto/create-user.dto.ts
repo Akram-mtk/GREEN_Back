@@ -20,6 +20,7 @@ export class CreateUserDto {
         
         @IsNumber()
         @Length(10,10)
+        @IsOptional()
         phone: number;
     
         @IsString()

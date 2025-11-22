@@ -15,9 +15,8 @@ export class RfidCardsService {
     })
   }
   
-  // NOTE : what if the user have been deleted means card.user_id set to null
   async assign(assignCardToUserDto: AssignCardToUserDto) {
-    // Fetch the existing card
+
     const card = await this.prisma.rfidCards.findUnique({
         where: { id: assignCardToUserDto.rfidCardId },
         select: { user_id: true },
@@ -27,7 +26,6 @@ export class RfidCardsService {
         throw new NotFoundException('Card not found');
     }
 
-    // Prevent reassignment
     if (card.user_id !== null) {
         throw new BadRequestException('This card is already assigned to a user');
     }

@@ -1,7 +1,7 @@
 {
   "name": "green_back",
   "version": "0.0.1",
-  "description": "",
+  "description": "<p align=\"center\">\r   <a href=\"http://nestjs.com/\" target=\"blank\"><img src=\"https://nestjs.com/img/logo-small.svg\" width=\"120\" alt=\"Nest Logo\" /></a>\r </p>",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
@@ -40,6 +40,7 @@
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.5",
     "@types/jest": "^30.0.0",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^22.19.1",
     "@types/supertest": "^6.0.2",
     "bcrypt": "^6.0.0",
@@ -77,5 +78,19 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  }
+  },
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Akram-mtk/GREEN_Back.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Akram-mtk/GREEN_Back/issues"
+  },
+  "homepage": "https://github.com/Akram-mtk/GREEN_Back#readme"
 }
