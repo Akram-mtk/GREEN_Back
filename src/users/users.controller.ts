@@ -10,8 +10,8 @@ export class UsersController {
     constructor(private readonly userService: UsersService){}
 
     @Post('create')
-    async create(@Body() CreateUserDto: CreateUserDto){
-        return new UserEntity(await this.userService.create(CreateUserDto))
+    async create(@Body() createUserDto: CreateUserDto){
+        return new UserEntity(await this.userService.create(createUserDto))
     }
 
     @Patch(":id")

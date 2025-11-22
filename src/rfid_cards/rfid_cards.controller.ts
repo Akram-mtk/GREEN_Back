@@ -1,8 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards  } from '@nestjs/common';
 import { RfidCardsService } from './rfid_cards.service';
 import { CreateRfidCardDto } from './dto/create-rfid_card.dto';
 import { UpdateRfidCardDto, AssignCardToUserDto } from './dto/update-rfid_card.dto';
 import { RfidCardEntity } from './entities/rfid_card.entity';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+
 
 @Controller('rfid-cards')
 export class RfidCardsController {
@@ -24,7 +26,7 @@ export class RfidCardsController {
 
 
 
-
+//   @UseGuards(JwtAuthGuard)
   @Get()
   findAll() {
     return this.rfidCardsService.findAll();
