@@ -9,11 +9,6 @@ import { UserEntity } from './entities/user.entity';
 export class UsersController {
     constructor(private readonly userService: UsersService){}
 
-    @Post('create')
-    async create(@Body() createUserDto: CreateUserDto){
-        return new UserEntity(await this.userService.create(createUserDto))
-    }
-
     @Patch(":id")
     async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
         return new UserEntity(await this.userService.update(id, updateUserDto));
