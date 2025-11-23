@@ -3,39 +3,38 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlserver"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Users {
-  id            String      @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  id            String      @id @default(uuid()) @db.Uuid
   first_name    String
   last_name     String
   email         String      @unique
   phone         String?
   password_hash String
   is_active     Boolean     @default(true)
-  created_at    DateTime    @default(now()) @db.DateTime2
-  last_login    DateTime?   @db.DateTime2
-  updated_at    DateTime?   @default(now()) @db.DateTime2
+  created_at    DateTime    @default(now()) @db.Timestamptz(6)
+  last_login    DateTime?   @db.Timestamptz(6)
+  updated_at    DateTime?   @default(now()) @db.Timestamptz(6)
 
   rfid_cards    RfidCards[]
 }
 
 model RfidCards {
-  id           String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
-  user_id      String?  @db.UniqueIdentifier
-  hashed_uid   String   @unique
-  status       String   @default("issued")  // changed from enum to string
-  issued_at    DateTime @default(now()) @db.DateTime2
-  last_used_at DateTime? @db.DateTime2
+  id           String    @id @default(uuid()) @db.Uuid
+  user_id      String?   @db.Uuid
+  hashed_uid   String    @unique
+  status       String    @default("issued")  // changed from enum to string
+  issued_at    DateTime  @default(now()) @db.Timestamptz(6)
+  last_used_at DateTime? @db.Timestamptz(6)
 
-  user         Users?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  user         Users?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
 }
 
-
 model SeatCategories {
-  id          String  @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  id          String  @id @default(uuid()) @db.Uuid
   name        String
   description String?
 
@@ -43,11 +42,11 @@ model SeatCategories {
 }
 
 model Seats {
-  id          String  @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  id          String  @id @default(uuid()) @db.Uuid
   section     String?
   row         String?
   number      String?
-  category_id String? @db.UniqueIdentifier
+  category_id String? @db.Uuid
 
   category    SeatCategories? @relation(fields: [category_id], references: [id])
 
@@ -55,10 +54,8 @@ model Seats {
 }
 
 model Gates {
-  id          String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  id          String   @id @default(uuid()) @db.Uuid
   code        String   @unique
   description String?
-  created_at  DateTime @default(now()) @db.DateTime2
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
 }
-
-
