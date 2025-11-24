@@ -19,5 +19,5 @@ export class UserEntity implements Users{
     updated_at: Date | null;
     
     @Exclude()
-    password_hash: string;
+    password: string;
 }

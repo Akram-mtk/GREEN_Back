@@ -10,7 +10,7 @@ export class RfidCardsService {
   
   
   async create(createRfidCardDto: CreateRfidCardDto) {
-    return this.prisma.rfidCards.create({
+    return this.prisma.rfid_cards.create({
       data: createRfidCardDto
     })
   }
@@ -18,9 +18,9 @@ export class RfidCardsService {
   // NOTE : what if the user have been deleted means card.user_id set to null
   async assign(assignCardToUserDto: AssignCardToUserDto) {
     // Fetch the existing card
-    const card = await this.prisma.rfidCards.findUnique({
+    const card = await this.prisma.rfid_cards.findUnique({
         where: { id: assignCardToUserDto.rfidCardId },
-        select: { user_id: true },
+        select: { owner_id: true },
     });
 
     if (!card) {
@@ -28,13 +28,13 @@ export class RfidCardsService {
     }
 
     // Prevent reassignment
-    if (card.user_id !== null) {
+    if (card.owner_id !== null) {
         throw new BadRequestException('This card is already assigned to a user');
     }
 
-    return this.prisma.rfidCards.update({
+    return this.prisma.rfid_cards.update({
         where: { id: assignCardToUserDto.rfidCardId },
-        data: { user_id: assignCardToUserDto.userId },
+        data: { owner_id: assignCardToUserDto.userId },
     });
   }
 

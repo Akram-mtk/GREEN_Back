@@ -1,17 +1,17 @@
-import { RfidCards } from "@prisma/client";
+import { Rfid_cards, CardStatus } from "@prisma/client";
 
-export class RfidCardEntity implements RfidCards{
+export class RfidCardEntity implements Rfid_cards{
 
 
-    constructor(partial: Partial<RfidCards>){
+    constructor(partial: Partial<Rfid_cards>){
         Object.assign(this,partial);
     }
 
     id: string;
-    user_id: string | null;
-    hashed_uid: string;
-    status: string;
-    issued_at: Date;
-    last_used_at: Date | null;
+    owner_id: string | null;
+    card_uid: string;
+    status: CardStatus;
+    // issued_at: Date;
+    // last_used_at: Date | null;
 
 }

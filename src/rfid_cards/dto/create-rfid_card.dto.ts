@@ -4,6 +4,6 @@ export class CreateRfidCardDto {
 
     @IsString()
     @IsNotEmpty()
-    hashed_uid: string;
+    card_uid: string;
     
 }

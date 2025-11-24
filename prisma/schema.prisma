@@ -8,54 +8,105 @@ datasource db {
 }
 
 model Users {
-  id            String      @id @default(uuid()) @db.Uuid
-  first_name    String
-  last_name     String
-  email         String      @unique
-  phone         String?
-  password_hash String
-  is_active     Boolean     @default(true)
-  created_at    DateTime    @default(now()) @db.Timestamptz(6)
-  last_login    DateTime?   @db.Timestamptz(6)
-  updated_at    DateTime?   @default(now()) @db.Timestamptz(6)
+  id         String    @id @default(uuid()) @db.Uuid
+  first_name String
+  last_name  String
+  email      String    @unique @db.VarChar(255)
+  phone      String?   @db.VarChar(20)
+  password   String    @db.VarChar(255)
+  is_active  Boolean   @default(true)
 
-  rfid_cards    RfidCards[]
+  cards         Rfid_cards[]
+  tickets       Ticket[]
+  subscriptions Subscription[]
+  entry_logs    EntryLog[]
 }
 
-model RfidCards {
-  id           String    @id @default(uuid()) @db.Uuid
-  user_id      String?   @db.Uuid
-  hashed_uid   String    @unique
-  status       String    @default("issued")  // changed from enum to string
-  issued_at    DateTime  @default(now()) @db.Timestamptz(6)
-  last_used_at DateTime? @db.Timestamptz(6)
+model Rfid_cards {
+  id       String       @id @default(uuid()) @db.Uuid
+  owner_id String?      @db.Uuid
+  card_uid String       @db.VarChar(64)
+  status   CardStatus   @default(issued)
 
-  user         Users?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  owner Users? @relation(fields: [owner_id], references: [id])
 }
 
-model SeatCategories {
-  id          String  @id @default(uuid()) @db.Uuid
-  name        String
-  description String?
+model Event {
+  id             String   @id @default(uuid()) @db.Uuid
+  name           String
+  any_gate_entry Boolean
+  open_at        DateTime
+  close_at       DateTime
+  published      Boolean   @default(false)
 
-  seats       Seats[]
+  allocations EventCapacityAllocation[]
+  entry_logs  EntryLog[]
 }
 
-model Seats {
-  id          String  @id @default(uuid()) @db.Uuid
-  section     String?
-  row         String?
-  number      String?
-  category_id String? @db.Uuid
+model Area {
+  id   String @id @default(uuid()) @db.Uuid
+  name String
 
-  category    SeatCategories? @relation(fields: [category_id], references: [id])
-
-  @@unique([section, row, number])
+  subscriptions Subscription[]
+  allocations   EventCapacityAllocation[]
 }
 
-model Gates {
-  id          String   @id @default(uuid()) @db.Uuid
-  code        String   @unique
-  description String?
-  created_at  DateTime @default(now()) @db.Timestamptz(6)
+model EventCapacityAllocation {
+  id             String   @id @default(uuid()) @db.Uuid
+  event_id       String   @db.Uuid
+  area_id        String   @db.Uuid
+  available_seats Int
+
+  event Event @relation(fields: [event_id], references: [id])
+  area  Area  @relation(fields: [area_id],  references: [id])
+
+  tickets Ticket[]
+
+  @@unique([event_id, area_id])
+}
+
+model Ticket {
+  id            String   @id @default(uuid()) @db.Uuid
+  allocation_id String   @db.Uuid
+  user_id       String   @db.Uuid
+  confirmed     Boolean  @default(false)
+  used          Boolean  @default(false)
+
+  user      Users                   @relation(fields: [user_id], references: [id])
+  allocation EventCapacityAllocation @relation(fields: [allocation_id], references: [id])
+
+  @@unique([allocation_id, user_id])
+}
+
+model Subscription {
+  id      String   @id @default(uuid()) @db.Uuid
+  from    DateTime @db.Date
+  to      DateTime @db.Date
+  owner_id String   @db.Uuid
+  area_id  String   @db.Uuid
+
+  owner Users @relation(fields: [owner_id], references: [id])
+  area  Area @relation(fields: [area_id],  references: [id])
+}
+
+model EntryLog {
+  id        String @id @default(uuid()) @db.Uuid
+  user_id   String @db.Uuid
+  event_id  String @db.Uuid
+  date      DateTime
+
+  user  Users  @relation(fields: [user_id], references: [id])
+  event Event @relation(fields: [event_id], references: [id])
+
+  @@unique([user_id, event_id])
+}
+
+
+
+
+
+enum CardStatus {
+  issued
+  active
+  blocked
 }
