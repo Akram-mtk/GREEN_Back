@@ -1,4 +1,4 @@
-import {IsOptional,IsUUID,IsNotEmpty, IsString, MinLength, IsEmail, IsEnum } from 'class-validator';
+import {IsOptional,IsNotEmpty, IsString, IsEmail } from 'class-validator';
 
 export class CreateUserDto {
 
@@ -20,8 +20,10 @@ export class CreateUserDto {
     password: string;
 
 
-}
 
-function IsUnique(): (target: CreateUserDto, propertyKey: "email") => void {
-    throw new Error('Function not implemented.');
+    @IsString()
+    @IsOptional()
+    phone: string;
+
+
 }
