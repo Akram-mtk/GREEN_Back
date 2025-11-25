@@ -8,14 +8,14 @@ datasource db {
 }
 
 model Users {
-  id         String    @id @default(uuid()) @db.Uuid
+  id         String   @id @default(uuid()) @db.Uuid
   first_name String
   last_name  String
-  email      String    @unique @db.VarChar(255)
-  phone      String?   @db.VarChar(20)
-  password   String    @db.VarChar(255)
-  is_active  Boolean   @default(true)
-  created_at DateTime  @default(now()) @db.Timestamptz(0)
+  email      String   @unique @db.VarChar(255)
+  phone      String?  @db.VarChar(20)
+  password   String   @db.VarChar(255)
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now()) @db.Timestamptz(0)
 
   cards         Rfid_cards[]
   tickets       Ticket[]
@@ -24,10 +24,10 @@ model Users {
 }
 
 model Rfid_cards {
-  id       String       @id @default(uuid()) @db.Uuid
-  owner_id String?      @db.Uuid
-  card_uid String       @db.VarChar(64)
-  status   CardStatus   @default(issued)
+  id       String     @id @default(uuid()) @db.Uuid
+  owner_id String?    @db.Uuid
+  card_uid String     @db.VarChar(64)
+  status   CardStatus @default(issued)
 
   owner Users? @relation(fields: [owner_id], references: [id])
 }
@@ -38,10 +38,11 @@ model Event {
   any_gate_entry Boolean
   open_at        DateTime
   close_at       DateTime
-  published      Boolean   @default(false)
+  published      Boolean  @default(false)
 
   allocations EventCapacityAllocation[]
   entry_logs  EntryLog[]
+  tickets     Ticket[]
 }
 
 model Area {
@@ -50,16 +51,17 @@ model Area {
 
   subscriptions Subscription[]
   allocations   EventCapacityAllocation[]
+  tickets       Ticket[]
 }
 
 model EventCapacityAllocation {
-  id             String   @id @default(uuid()) @db.Uuid
-  event_id       String   @db.Uuid
-  area_id        String   @db.Uuid
+  id              String @id @default(uuid()) @db.Uuid
+  event_id        String @db.Uuid
+  area_id         String @db.Uuid
   available_seats Int
 
   event Event @relation(fields: [event_id], references: [id])
-  area  Area  @relation(fields: [area_id],  references: [id])
+  area  Area  @relation(fields: [area_id], references: [id])
 
   tickets Ticket[]
 
@@ -67,44 +69,44 @@ model EventCapacityAllocation {
 }
 
 model Ticket {
-  id            String   @id @default(uuid()) @db.Uuid
-  allocation_id String   @db.Uuid
-  user_id       String   @db.Uuid
-  confirmed     Boolean  @default(false)
-  used          Boolean  @default(false)
+  id            String  @id @default(uuid()) @db.Uuid
+  allocation_id String  @db.Uuid
+  user_id       String  @db.Uuid
+  event_id      String  @db.Uuid
+  confirmed     Boolean @default(false)
+  used          Boolean @default(false)
 
-  user      Users                   @relation(fields: [user_id], references: [id])
+  user       Users                   @relation(fields: [user_id], references: [id])
   allocation EventCapacityAllocation @relation(fields: [allocation_id], references: [id])
+  event      Event                   @relation(fields: [event_id], references: [id])
+  area       Area?                   @relation(fields: [areaId], references: [id])
+  areaId     String?                 @db.Uuid
 
-  @@unique([allocation_id, user_id])
+  @@unique([event_id, user_id])
 }
 
 model Subscription {
-  id      String   @id @default(uuid()) @db.Uuid
-  from    DateTime @db.Date
-  to      DateTime @db.Date
+  id       String   @id @default(uuid()) @db.Uuid
+  from     DateTime @db.Date
+  to       DateTime @db.Date
   owner_id String   @db.Uuid
   area_id  String   @db.Uuid
 
   owner Users @relation(fields: [owner_id], references: [id])
-  area  Area @relation(fields: [area_id],  references: [id])
+  area  Area  @relation(fields: [area_id], references: [id])
 }
 
 model EntryLog {
-  id        String @id @default(uuid()) @db.Uuid
-  user_id   String @db.Uuid
-  event_id  String @db.Uuid
-  date      DateTime
+  id       String   @id @default(uuid()) @db.Uuid
+  user_id  String   @db.Uuid
+  event_id String   @db.Uuid
+  date     DateTime
 
-  user  Users  @relation(fields: [user_id], references: [id])
+  user  Users @relation(fields: [user_id], references: [id])
   event Event @relation(fields: [event_id], references: [id])
 
   @@unique([user_id, event_id])
 }
-
-
-
-
 
 enum CardStatus {
   issued

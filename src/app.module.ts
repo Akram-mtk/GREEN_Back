@@ -5,9 +5,12 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { RfidCardsModule } from './rfid_cards/rfid_cards.module';
 import { AuthModule } from './auth/auth.module';
+import { TicketsModule } from './tickets/tickets.module';
+import { EventsModule } from './events/events.module';
+import { EventCapacityAllocationsModule } from './event_capacity_allocations/event_capacity_allocations.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, RfidCardsModule, AuthModule],
+  imports: [PrismaModule, UsersModule, RfidCardsModule, AuthModule, TicketsModule, EventCapacityAllocationsModule, EventsModule],
   controllers: [AppController],
   providers: [AppService],
 })
