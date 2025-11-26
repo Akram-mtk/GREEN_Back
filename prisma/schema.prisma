@@ -8,108 +8,100 @@ datasource db {
 }
 
 model Users {
-  id         String   @id @default(uuid()) @db.Uuid
-  first_name String
-  last_name  String
-  email      String   @unique @db.VarChar(255)
-  phone      String?  @db.VarChar(20)
-  password   String   @db.VarChar(255)
-  is_active  Boolean  @default(true)
-  created_at DateTime @default(now()) @db.Timestamptz(0)
+  id            String      @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  first_name    String
+  last_name     String
+  email         String      @unique
+  phone         String?
+  password_hash String
+  is_active     Boolean     @default(true)
+  created_at    DateTime    @default(now()) @db.DateTime2
+  last_login    DateTime?   @db.DateTime2
+  updated_at    DateTime?   @default(now()) @db.DateTime2
 
-  cards         Rfid_cards[]
-  tickets       Ticket[]
-  subscriptions Subscription[]
-  entry_logs    EntryLog[]
+  rfid_cards    RfidCards[]
+  soldPasses    Sold_Passes[]
 }
 
-model Rfid_cards {
-  id       String     @id @default(uuid()) @db.Uuid
-  owner_id String?    @db.Uuid
-  card_uid String     @db.VarChar(64)
-  status   CardStatus @default(issued)
+model RfidCards {
+  id           String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  user_id      String?  @db.UniqueIdentifier
+  hashed_uid   String   @unique
+  status       String   @default("issued")  
+  issued_at    DateTime @default(now()) @db.DateTime2
+  last_used_at DateTime? @db.DateTime2
 
-  owner Users? @relation(fields: [owner_id], references: [id])
+  user         Users?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
 }
 
-model Event {
-  id             String   @id @default(uuid()) @db.Uuid
-  name           String
-  any_gate_entry Boolean
-  open_at        DateTime
-  close_at       DateTime
-  published      Boolean  @default(false)
 
-  allocations EventCapacityAllocation[]
-  entry_logs  EntryLog[]
-  tickets     Ticket[]
+
+
+model Gates {
+  id                    String                  @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  name                  String                  @unique
+  created_at            DateTime                @default(now()) @db.DateTime2
+
+  eventGateCapacities   EventGateCapacity[]
 }
 
-model Area {
-  id   String @id @default(uuid()) @db.Uuid
-  name String
+model event_types {
+  id          String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  type_name   String   @unique
 
-  subscriptions Subscription[]
-  allocations   EventCapacityAllocation[]
-  tickets       Ticket[]
+  created_at  DateTime @default(now()) @db.DateTime2
 }
 
-model EventCapacityAllocation {
-  id              String @id @default(uuid()) @db.Uuid
-  event_id        String @db.Uuid
-  area_id         String @db.Uuid
-  available_seats Int
+model Events {
+  id                    String                  @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  event_name            String
+  event_type            String
+  all_gate_entry        Boolean 
+  VIP_sells             Boolean
+  open_at               DateTime                @db.DateTime2
+  close_at              DateTime                @db.DateTime2
+  created_at            DateTime                @default(now()) @db.DateTime2
 
-  event Event @relation(fields: [event_id], references: [id])
-  area  Area  @relation(fields: [area_id], references: [id])
-
-  tickets Ticket[]
-
-  @@unique([event_id, area_id])
+  eventType             event_types             @relation(fields: [event_type], references: [id], onDelete: Cascade)
+  proposedPasses        Proposed_Passes[]
+  soldPasses            Sold_Passes[]
+  eventGateCapacities   EventGateCapacity[]
 }
 
-model Ticket {
-  id            String  @id @default(uuid()) @db.Uuid
-  allocation_id String  @db.Uuid
-  user_id       String  @db.Uuid
-  event_id      String  @db.Uuid
-  confirmed     Boolean @default(false)
-  used          Boolean @default(false)
+model EventGateCapacity {
+  id              String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  event_id        String   @db.UniqueIdentifier
+  gate_id         String   @db.UniqueIdentifier
+  remaining_seats Int
+  created_at      DateTime @default(now()) @db.DateTime2
+  updated_at      DateTime @updatedAt
 
-  user       Users                   @relation(fields: [user_id], references: [id])
-  allocation EventCapacityAllocation @relation(fields: [allocation_id], references: [id])
-  event      Event                   @relation(fields: [event_id], references: [id])
-  area       Area?                   @relation(fields: [areaId], references: [id])
-  areaId     String?                 @db.Uuid
+  event           Events   @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  gate            Gates    @relation(fields: [gate_id], references: [id], onDelete: Cascade)
 
-  @@unique([event_id, user_id])
+  @@unique([event_id, gate_id])
 }
 
-model Subscription {
-  id       String   @id @default(uuid()) @db.Uuid
-  from     DateTime @db.Date
-  to       DateTime @db.Date
-  owner_id String   @db.Uuid
-  area_id  String   @db.Uuid
+model Proposed_Passes {
+  id         String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  pass_type  String
+  price      Float
+  event_id   String   @db.UniqueIdentifier
+  created_at DateTime @default(now()) @db.DateTime2
 
-  owner Users @relation(fields: [owner_id], references: [id])
-  area  Area  @relation(fields: [area_id], references: [id])
+  event      Events   @relation(fields: [event_id], references: [id], onDelete: Cascade)
 }
 
-model EntryLog {
-  id       String   @id @default(uuid()) @db.Uuid
-  user_id  String   @db.Uuid
-  event_id String   @db.Uuid
-  date     DateTime
+model Sold_Passes {
+  id               String   @id @default(dbgenerated("NEWID()")) @db.UniqueIdentifier
+  event_id         String   @db.UniqueIdentifier
+  user_id          String   @db.UniqueIdentifier
+  purchase_date    DateTime @default(now()) @db.DateTime2
+  entry_gate_id    String?  @db.UniqueIdentifier
+  is_used          Boolean  @default(false)
 
-  user  Users @relation(fields: [user_id], references: [id])
-  event Event @relation(fields: [event_id], references: [id])
-
-  @@unique([user_id, event_id])
+  event      Events   @relation(fields: [event_id], references: [id], onDelete: Cascade)
+  user       Users          @relation(fields: [user_id], references: [id], onDelete: Cascade)
 }
 
-enum CardStatus {
-  issued
-  active
-  blocked
-}
+
