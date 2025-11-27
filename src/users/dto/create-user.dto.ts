@@ -20,7 +20,7 @@ export class CreateUserDto {
     password: string;
 
 
-
+    // TODO: check if a proper phone number
     @IsString()
     @IsOptional()
     phone: string;

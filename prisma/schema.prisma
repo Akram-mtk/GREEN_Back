@@ -19,7 +19,7 @@ model Users {
 
   cards         Rfid_cards[]
   tickets       Ticket[]
-  subscriptions Subscription[]
+  subscriptions UserSubscription[]
   entry_logs    EntryLog[]
 }
 
@@ -48,8 +48,8 @@ model Area {
   id   String @id @default(uuid()) @db.Uuid
   name String
 
-  subscriptions Subscription[]
   allocations   EventCapacityAllocation[]
+  subscriptionPlans SubscriptionPlan[]
 }
 
 model EventCapacityAllocation {
@@ -79,15 +79,27 @@ model Ticket {
   @@unique([allocation_id, user_id])
 }
 
-model Subscription {
-  id      String   @id @default(uuid()) @db.Uuid
-  from    DateTime @db.Date
-  to      DateTime @db.Date
-  owner_id String   @db.Uuid
-  area_id  String   @db.Uuid
+model SubscriptionPlan{
+  id                 String   @id @default(uuid()) @db.Uuid
+  name               String
+  description        String?
+  price              Float
+  number_of_entrance Int?
+  area_id            String   @db.Uuid
+
+  area  Area @relation(fields: [area_id],  references: [id])
+  userSubscriptions  UserSubscription[]
+}
+
+model UserSubscription {
+  id                   String   @id @default(uuid()) @db.Uuid
+  owner_id             String   @db.Uuid
+  subscription_plan_id String   @db.Uuid
+  entrance_left        Int?
 
   owner Users @relation(fields: [owner_id], references: [id])
-  area  Area @relation(fields: [area_id],  references: [id])
+  subscription SubscriptionPlan @relation(fields: [subscription_plan_id], references: [id])
+
 }
 
 model EntryLog {
