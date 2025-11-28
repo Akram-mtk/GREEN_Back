@@ -29,13 +29,13 @@ export class SubscriptionPlanController {
 
 
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSubscriptionPlanDto: UpdateSubscriptionPlanDto) {
-    return this.subscriptionPlanService.update(+id, updateSubscriptionPlanDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateSubscriptionPlanDto: UpdateSubscriptionPlanDto) {
+  //   return this.subscriptionPlanService.update(+id, updateSubscriptionPlanDto);
+  // }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.subscriptionPlanService.remove(+id);
-  }
+  // @Delete(':id')
+  // remove(@Param('id') id: string) {
+  //   return this.subscriptionPlanService.remove(+id);
+  // }
 }

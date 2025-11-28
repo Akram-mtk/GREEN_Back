@@ -1,17 +1,25 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import * as express from 'express';
+import { join } from 'path';
 
 async function bootstrap() {
+
   const app = await NestFactory.create(AppModule);
 
-  // Enable class-validator / class-transformer such as @Is_email
+  app.use(
+    '/uploads',
+    express.static(join(process.cwd(), 'uploads')),
+  );
+
+  // Global validation (DTOs)
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,            // strips properties not in DTO
       forbidNonWhitelisted: true, // throws error if unknown props are sent
       transform: true,            // transforms payloads to DTO instances
-    }),
+    })
   );
 
   app.useGlobalInterceptors(

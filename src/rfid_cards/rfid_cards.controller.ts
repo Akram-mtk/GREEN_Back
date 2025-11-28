@@ -26,24 +26,24 @@ export class RfidCardsController {
 
 
 
-//   @UseGuards(JwtAuthGuard)
-  @Get()
-  findAll() {
-    return this.rfidCardsService.findAll();
-  }
+// //   @UseGuards(JwtAuthGuard)
+//   @Get()
+//   findAll() {
+//     return this.rfidCardsService.findAll();
+//   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.rfidCardsService.findOne(+id);
-  }
+//   @Get(':id')
+//   findOne(@Param('id') id: string) {
+//     return this.rfidCardsService.findOne(+id);
+//   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRfidCardDto: UpdateRfidCardDto) {
-    return this.rfidCardsService.update(+id, updateRfidCardDto);
-  }
+//   @Patch(':id')
+//   update(@Param('id') id: string, @Body() updateRfidCardDto: UpdateRfidCardDto) {
+//     return this.rfidCardsService.update(+id, updateRfidCardDto);
+//   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.rfidCardsService.remove(+id);
-  }
+//   @Delete(':id')
+//   remove(@Param('id') id: string) {
+//     return this.rfidCardsService.remove(+id);
+//   }
 }

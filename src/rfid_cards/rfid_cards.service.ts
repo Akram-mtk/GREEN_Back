@@ -2,6 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { CreateRfidCardDto } from './dto/create-rfid_card.dto';
 import { AssignCardToUserDto, UpdateRfidCardDto } from './dto/update-rfid_card.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { CardStatus } from '@prisma/client';
 
 @Injectable()
 export class RfidCardsService {
@@ -34,7 +35,10 @@ export class RfidCardsService {
 
     return this.prisma.rfid_cards.update({
         where: { id: assignCardToUserDto.rfidCardId },
-        data: { owner_id: assignCardToUserDto.userId },
+        data: { 
+          owner_id: assignCardToUserDto.userId,
+          status: CardStatus.active
+        }
     });
   }
 
