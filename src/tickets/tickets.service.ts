@@ -22,43 +22,37 @@ export class TicketsService {
       }
     })
     if(!ticket){
-    return await this.prisma.$transaction(async (tx) => {
-      //section cretic
-      const allocation = await tx.$queryRaw<Array<Record<string, any>>>`SELECT * FROM public."EventCapacityAllocation"
-      WHERE id = ${createTicketDto.allocation_id}::uuid 
-      FOR UPDATE`;
+      await this.prisma.$transaction(async (tx) => {
+        let available_seat = await tx.eventCapacityAllocation.updateMany({
+              where: {
+                available_seats:{gt:0}, 
+              event_id: createTicketDto.event_id 
+            },
+              data: {
+                available_seats: { decrement: 1 } 
+              },
+            });
+            if(available_seat){
+              return await tx.ticket.create({
+                data: createTicketDto
+              }); 
+            }else{
+              throw new Error('SOLD_OUT: No seats available for this event.');
+            }
 
-
-      if (allocation.length === 0) {
-        throw new Error('Allocation not found');
-      }
-      
-      if (allocation[0].available_seats <= 0) {
-        throw new Error('No available seats in this allocation');
-      }
-
-       await sleep(4000); // Simulate delay for concurrency testing
-
-
-      await tx.$queryRaw`UPDATE public."EventCapacityAllocation"
-      SET available_seats = available_seats - 1 
-      WHERE id = ${createTicketDto.allocation_id}::uuid`;
-
-      await tx.ticket.create({
-        data: createTicketDto
       });
 
-
-      //section cretic
-    },{
-      timeout: 60000, // 10 seconds timeout for the transaction
-      maxWait: 60000 // 10 seconds max wait time to acquire locks
-    });
     
-    }
-    throw new Error('User already has a ticket for this event');
-     
+    
+
+
   }
+    else{
+      throw new Error('User already has a ticket for this event');  
+    }
+  }
+     
+ 
 
   async findAll() {
     return await this.prisma.ticket.findMany();
