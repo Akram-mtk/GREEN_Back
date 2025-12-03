@@ -21,6 +21,7 @@ export class TicketsService {
                event_id: createTicketDto.event_id
       }
     })
+
     if(!ticket){
       await this.prisma.$transaction(async (tx) => {
         let available_seat = await tx.eventCapacityAllocation.updateMany({
@@ -39,14 +40,9 @@ export class TicketsService {
             }else{
               throw new Error('SOLD_OUT: No seats available for this event.');
             }
-
       });
 
-    
-    
-
-
-  }
+    }
     else{
       throw new Error('User already has a ticket for this event');  
     }
