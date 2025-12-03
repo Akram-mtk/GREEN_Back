@@ -22,11 +22,12 @@ export class AreaController {
   //   return this.areaService.findOne(+id);
   // }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateAreaDto: UpdateAreaDto) {
-  //   return this.areaService.update(+id, updateAreaDto);
-  // }
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateAreaDto: UpdateAreaDto) {
+    return this.areaService.update(id, updateAreaDto);
+  }
 
+  // FIXME : should be deleted ? (pb rahi foreign key)
   // @Delete(':id')
   // remove(@Param('id') id: string) {
   //   return this.areaService.remove(+id);

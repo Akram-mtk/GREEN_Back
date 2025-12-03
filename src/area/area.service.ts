@@ -21,8 +21,11 @@ export class AreaService {
     return `This action returns a #${id} area`;
   }
 
-  update(id: number, updateAreaDto: UpdateAreaDto) {
-    return `This action updates a #${id} area`;
+  update(id: string, updateAreaDto: UpdateAreaDto) {
+    return this.prisma.area.update({
+      where: { id },
+      data: updateAreaDto
+    });
   }
 
   remove(id: number) {

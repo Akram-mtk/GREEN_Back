@@ -8,8 +8,10 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 @Controller('users')
 export class UsersController {
+  
     constructor(private readonly userService: UsersService){}
 
+    // FIXME: remove id, payload is enough
     @Patch(":id")
     @UseGuards(JwtAuthGuard)
     async update(

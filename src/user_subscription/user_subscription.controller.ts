@@ -14,6 +14,7 @@ export class UserSubscriptionController {
     return this.userSubscriptionService.create(createUserSubscriptionDto);
   }
 
+  // FIXME : hadi returni data msgma
   @UseGuards(JwtAuthGuard)
   @Get()
   findAll(@Request() req: any) {

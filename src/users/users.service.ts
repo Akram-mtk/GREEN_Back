@@ -25,7 +25,7 @@ export class UsersService {
       })
     }catch (err){
       if (err.code === 'P2002' && err.meta?.target?.includes('email')) {
-        throw new ConflictException('Email already exists');
+        throw new ConflictException('Email already used');
       }
       throw err;
     }

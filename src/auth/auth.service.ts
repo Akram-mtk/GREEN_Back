@@ -16,7 +16,7 @@ export class AuthService {
   async validateUser(email: string, pass: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) return null;
-
+// FIXME : is user.active
     const isMatch = await bcrypt.compare(pass, user.password);
     if (!isMatch) return null;
 
@@ -26,7 +26,7 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { sub: user.id, email: user.email };
+    const payload = { sub: user.id };
     return {
       access_token: this.jwtService.sign(payload),
       user: new UserEntity(user)

@@ -15,12 +15,19 @@ export class SubscriptionPlanService {
   }
 
   async findAll() {
-    return await this.prisma.subscriptionPlan.findMany()
+    return await this.prisma.subscriptionPlan.findMany({
+      where: {
+        is_active: true
+      }
+    })
   }
 
   async findOne(id: string) {
     const respons = await this.prisma.subscriptionPlan.findUnique({
-      where: { id },
+      where: {
+        id,
+        is_active: true
+      }
     });
 
     if (!respons) {
