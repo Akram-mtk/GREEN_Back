@@ -26,13 +26,13 @@ export class TicketsService {
         let available_seat = await tx.eventCapacityAllocation.updateMany({
               where: {
                 available_seats:{gt:0}, 
-              event_id: createTicketDto.event_id 
+               event_id: createTicketDto.event_id 
             },
               data: {
                 available_seats: { decrement: 1 } 
               },
             });
-            if(available_seat){
+            if(available_seat.count > 0){
               return await tx.ticket.create({
                 data: createTicketDto
               }); 
