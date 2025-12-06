@@ -11,7 +11,7 @@ export class RfidCardEntity implements Rfid_cards{
     owner_id: string | null;
     card_uid: string;
     status: CardStatus;
-    // issued_at: Date;
-    // last_used_at: Date | null;
+    created_at: Date;
+    updated_at: Date ;
 
 }

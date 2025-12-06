@@ -41,7 +41,6 @@ model Area {
 
   EventCapacityAllocation EventCapacityAllocation[]
   subscriptionPlans       SubscriptionPlan[]
-  Ticket                  Ticket[]
 }
 
 // FIXME : hada sur ytbadal
@@ -50,11 +49,13 @@ model Rfid_cards {
   owner_id String?      @db.Uuid
   card_uid String       @unique @db.VarChar(64)
   status   CardStatus   @default(issued)
-  created_at DateTime @default(now()) @db.Timestamptz(0)
-  updated_at DateTime @updatedAt @db.Timestamptz(0)
+  created_at DateTime  @db.Timestamptz(0) @default(now())
+  updated_at DateTime  @db.Timestamptz(0) @updatedAt
 
   owner Users? @relation(fields: [owner_id], references: [id])
 }
+
+
 
 // FIXME : open_ay, close_at are useless
 model Event {
@@ -63,6 +64,7 @@ model Event {
   any_gate_entry Boolean
   open_at        DateTime
   close_at       DateTime
+  start_at     DateTime
   home_team_id   String    @db.Uuid
   away_team_id   String    @db.Uuid
   published      Boolean   @default(false)
@@ -97,12 +99,10 @@ model Ticket {
   user_id                 String                  @db.Uuid
   confirmed               Boolean                 @default(false)
   used                    Boolean                 @default(false)
-  areaId                  String                  @db.Uuid
   event_id                String                  @db.Uuid
 
 
   EventCapacityAllocation EventCapacityAllocation @relation(fields: [allocation_id], references: [id])
-  Area                    Area?                   @relation(fields: [areaId], references: [id])
   Event                   Event                   @relation(fields: [event_id], references: [id])
   Users                   Users                   @relation(fields: [user_id], references: [id])
 

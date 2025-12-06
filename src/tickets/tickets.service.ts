@@ -33,7 +33,7 @@ export class TicketsService {
                 available_seats: { decrement: 1 } 
               },
             });
-            if(available_seat){
+            if(available_seat.count > 0){
               return await tx.ticket.create({
                 data: createTicketDto
               }); 
