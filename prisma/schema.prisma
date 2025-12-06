@@ -57,7 +57,7 @@ model Rfid_cards {
 
 
 
-// FIXME : open_ay, close_at are useless
+// FIXME : open_ay, close_at are useless     TF whyyyy 
 model Event {
   id             String   @id @default(uuid()) @db.Uuid
   name           String

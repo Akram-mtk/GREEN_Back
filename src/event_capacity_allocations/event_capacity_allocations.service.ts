@@ -1,26 +1,38 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventCapacityAllocationDto } from './dto/create-event_capacity_allocation.dto';
 import { UpdateEventCapacityAllocationDto } from './dto/update-event_capacity_allocation.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class EventCapacityAllocationsService {
-  create(createEventCapacityAllocationDto: CreateEventCapacityAllocationDto) {
-    return 'This action adds a new eventCapacityAllocation';
+  constructor(private prisma: PrismaService) {}
+
+  async create(createEventCapacityAllocationDto: CreateEventCapacityAllocationDto) {
+    return await this.prisma.eventCapacityAllocation.create({
+      data: createEventCapacityAllocationDto
+    });
   }
 
-  findAll() {
-    return `This action returns all eventCapacityAllocations`;
+  async findAll() {
+    return await this.prisma.eventCapacityAllocation.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} eventCapacityAllocation`;
+  async findOne(id: string) {
+    return await this.prisma.eventCapacityAllocation.findUnique({
+      where: { id: id }
+    });
   }
 
-  update(id: number, updateEventCapacityAllocationDto: UpdateEventCapacityAllocationDto) {
-    return `This action updates a #${id} eventCapacityAllocation`;
+  async update(id: string, updateEventCapacityAllocationDto: UpdateEventCapacityAllocationDto) {
+    return await this.prisma.eventCapacityAllocation.update({
+      where: { id: id },
+      data: updateEventCapacityAllocationDto
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} eventCapacityAllocation`;
+  async remove(id: string) {
+    return await this.prisma.eventCapacityAllocation.delete({
+      where: { id: id }
+    });
   }
 }

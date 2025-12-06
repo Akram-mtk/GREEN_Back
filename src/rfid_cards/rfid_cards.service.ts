@@ -29,7 +29,7 @@ export class RfidCardsService {
     }
 
     // Prevent reassignment
-    if (card.owner_id !== null) {
+    if (card.owner_id !== null  ) {
         throw new BadRequestException('This card is already assigned to a user');
     }
 
@@ -44,7 +44,14 @@ export class RfidCardsService {
 
 
 
-
+  async blockCard(id: string) {
+    return this.prisma.rfid_cards.update({
+      where: { id: id },
+      data: { status: CardStatus.blocked ,
+              owner_id: null
+            }
+    });
+  }
 
 
 

@@ -20,6 +20,11 @@ export class RfidCardsController {
     return new RfidCardEntity(await this.rfidCardsService.assign(assignCardToUserDto))
   }
 
+  @Patch('block/:id')
+  async blockCard(@Param('id') id: string){
+    return new RfidCardEntity (await this.rfidCardsService.blockCard(id))
+  }
+
 
 
 

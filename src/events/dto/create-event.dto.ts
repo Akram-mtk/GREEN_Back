@@ -8,7 +8,7 @@ export class CreateEventDto {
 
     @IsBoolean()
     @IsNotEmpty()
-    any_gate_entry: string;
+    any_gate_entry: boolean;
 
     @IsDateString()
     @IsNotEmpty()

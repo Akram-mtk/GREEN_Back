@@ -7,28 +7,28 @@ import { UpdateEventCapacityAllocationDto } from './dto/update-event_capacity_al
 export class EventCapacityAllocationsController {
   constructor(private readonly eventCapacityAllocationsService: EventCapacityAllocationsService) {}
 
-  @Post()
+  @Post('craete')
   create(@Body() createEventCapacityAllocationDto: CreateEventCapacityAllocationDto) {
     return this.eventCapacityAllocationsService.create(createEventCapacityAllocationDto);
   }
 
-  @Get()
+  @Get('getAll')
   findAll() {
     return this.eventCapacityAllocationsService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.eventCapacityAllocationsService.findOne(+id);
+    return this.eventCapacityAllocationsService.findOne(id);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateEventCapacityAllocationDto: UpdateEventCapacityAllocationDto) {
-    return this.eventCapacityAllocationsService.update(+id, updateEventCapacityAllocationDto);
+    return this.eventCapacityAllocationsService.update(id, updateEventCapacityAllocationDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.eventCapacityAllocationsService.remove(+id);
+    return this.eventCapacityAllocationsService.remove(id);
   }
 }

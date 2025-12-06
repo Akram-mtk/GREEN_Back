@@ -47,6 +47,13 @@ export class TicketsService {
       throw new Error('User already has a ticket for this event');  
     }
   }
+
+  async confirmTicket(id: string) {
+    return await this.prisma.ticket.update({
+      where: { id: id },
+      data: { confirmed: true }
+    });
+  }
      
  
 
