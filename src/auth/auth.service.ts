@@ -15,8 +15,9 @@ export class AuthService {
   // called when logging in
   async validateUser(email: string, pass: string) {
     const user = await this.usersService.findByEmail(email);
-    if (!user) return null;
-// FIXME : is user.active
+    
+    if (!user || !user.is_active) return null;
+
     const isMatch = await bcrypt.compare(pass, user.password);
     if (!isMatch) return null;
 

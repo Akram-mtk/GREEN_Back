@@ -43,12 +43,13 @@ model Area {
   subscriptionPlans       SubscriptionPlan[]
 }
 
-// FIXME : hada sur ytbadal
+
 model Rfid_cards {
   id       String       @id @default(uuid()) @db.Uuid
   owner_id String?      @db.Uuid
   card_uid String       @unique @db.VarChar(64)
   status   CardStatus   @default(issued)
+  
   created_at DateTime  @db.Timestamptz(0) @default(now())
   updated_at DateTime  @db.Timestamptz(0) @updatedAt
 

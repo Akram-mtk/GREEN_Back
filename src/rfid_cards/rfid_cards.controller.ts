@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards  } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { RfidCardsService } from './rfid_cards.service';
 import { CreateRfidCardDto } from './dto/create-rfid_card.dto';
 import { UpdateRfidCardDto, AssignCardToUserDto } from './dto/update-rfid_card.dto';
@@ -41,6 +41,13 @@ export class RfidCardsController {
 //   findOne(@Param('id') id: string) {
 //     return this.rfidCardsService.findOne(+id);
 //   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('myCard')
+  findMine(@Request() req: any) {
+    const user_id = req.user.userId;
+    return this.rfidCardsService.findOne(user_id);
+  }
 
 //   @Patch(':id')
 //   update(@Param('id') id: string, @Body() updateRfidCardDto: UpdateRfidCardDto) {

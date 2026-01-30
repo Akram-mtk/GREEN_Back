@@ -47,13 +47,19 @@ export class RfidCardsService {
   async blockCard(id: string) {
     return this.prisma.rfid_cards.update({
       where: { id: id },
-      data: { status: CardStatus.blocked ,
-              owner_id: null
-            }
+      data: { status: CardStatus.blocked }
     });
   }
 
 
+  async findOne(id: string) {
+    return await this.prisma.rfid_cards.findFirst({
+      where: { 
+        owner_id: id,
+        status: CardStatus.active
+       }
+    });
+  }
 
 
 
@@ -65,9 +71,6 @@ export class RfidCardsService {
     return `This action returns all rfidCards`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} rfidCard`;
-  }
 
   
 

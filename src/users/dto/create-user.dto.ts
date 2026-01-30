@@ -1,4 +1,4 @@
-import {IsOptional,IsNotEmpty, IsString, IsEmail } from 'class-validator';
+import {IsOptional,IsNotEmpty, IsString, IsEmail, Matches } from 'class-validator';
 
 export class CreateUserDto {
 
@@ -20,10 +20,13 @@ export class CreateUserDto {
     password: string;
 
 
-    // TODO: check if a proper phone number
     @IsString()
     @IsOptional()
-    phone: string;
+    @Matches(
+    /^0(5|6|7)\d{8}$/,
+    { message: 'Phone number must be a valid Algerian mobile number' },
+  )
+    phone?: string;
 
 
 }

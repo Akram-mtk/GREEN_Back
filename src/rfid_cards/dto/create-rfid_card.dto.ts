@@ -1,9 +1,14 @@
-import {IsOptional,IsUUID,IsNotEmpty, IsString, MinLength, IsEmail, IsEnum, isString } from 'class-validator';
+import {IsOptional,IsUUID,IsNotEmpty, IsString } from 'class-validator';
+
 
 export class CreateRfidCardDto {
-
-    @IsString()
-    @IsNotEmpty()
-    card_uid: string;
     
+  @IsOptional()
+  @IsUUID()
+  owner_id?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  card_uid: string;
+
 }

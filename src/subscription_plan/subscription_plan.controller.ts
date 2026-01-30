@@ -22,6 +22,12 @@ export class SubscriptionPlanController {
     return this.subscriptionPlanService.findOne(id);
   }
 
+  @Patch(':id/deactivate')
+  deactivate(@Param('id') id: string) {
+    return this.subscriptionPlanService.deactivate(id);
+  }
+
+
 
 
 
@@ -36,6 +42,6 @@ export class SubscriptionPlanController {
 
   // @Delete(':id')
   // remove(@Param('id') id: string) {
-  //   return this.subscriptionPlanService.remove(+id);
+  //   return this.subscriptionPlanService.remove(id);
   // }
 }

@@ -36,17 +36,25 @@ export class SubscriptionPlanService {
 
     return respons;
   }
-
-
-
-
-
-
-  update(id: number, updateSubscriptionPlanDto: UpdateSubscriptionPlanDto) {
+  
+  
+  
+  
+  
+  
+  update(id: string, updateSubscriptionPlanDto: UpdateSubscriptionPlanDto) {
     return `This action updates a #${id} subscriptionPlan`;
   }
+  
+  
+  deactivate(id: string) {
+    return this.prisma.subscriptionPlan.update({
+      where: { id },
+      data : { is_active: false}
+    });;
+  }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} subscriptionPlan`;
   }
 }

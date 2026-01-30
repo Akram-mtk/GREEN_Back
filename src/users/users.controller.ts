@@ -9,21 +9,16 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 @Controller('users')
 export class UsersController {
   
-    constructor(private readonly userService: UsersService){}
+  constructor(private readonly userService: UsersService){}
 
-    // FIXME: remove id, payload is enough
-    @Patch(":id")
-    @UseGuards(JwtAuthGuard)
-    async update(
-        @Param('id') id: string,
-        @Body() updateUserDto: UpdateUserDto,
-        @Request() req: any
-    ) {
-        if(id != req.user.userId){
-            throw new ForbiddenException('You cannot update another user.');
-        }
-        return new UserEntity(await this.userService.update(id, updateUserDto));
-    }
+  @Patch()
+  @UseGuards(JwtAuthGuard)
+  async update(
+    @Body() updateUserDto: UpdateUserDto,
+    @Request() req: any
+  ) {
+    return new UserEntity(await this.userService.update(req.user.userId, updateUserDto));
+  }
 
 
 
