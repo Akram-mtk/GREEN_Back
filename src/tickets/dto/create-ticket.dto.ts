@@ -15,6 +15,13 @@ export class CreateTicketDto {
     @IsNotEmpty()
     event_id: string;
 
+    
+
+    @IsBoolean()
+    isMinor: boolean;
 
 
+    @IsString()
+    @IsNotEmpty()
+    order_id: string;
 }

@@ -16,44 +16,27 @@ export class TicketsService {
   
   async create(createTicketDto: CreateTicketDto) {
 
-    let ticket = await this.prisma.ticket.findFirst({
-      where: { user_id: createTicketDto.user_id ,
-               event_id: createTicketDto.event_id
-      }
-    })
-
-    if(!ticket){
-      await this.prisma.$transaction(async (tx) => {
-        let available_seat = await tx.eventCapacityAllocation.updateMany({
-              where: {
-                available_seats:{gt:0}, 
-              event_id: createTicketDto.event_id 
-            },
-              data: {
-                available_seats: { decrement: 1 } 
-              },
-            });
-            if(available_seat.count > 0){
-              return await tx.ticket.create({
-                data: createTicketDto
-              }); 
-            }else{
-              throw new Error('SOLD_OUT: No seats available for this event.');
-            }
+    await this.prisma.$transaction(async (tx) => {
+      await tx.ticket.create({
+        data: createTicketDto
       });
 
-    }
-    else{
-      throw new Error('User already has a ticket for this event');  
-    }
+      await tx.order.delete({
+        where : {
+          id : createTicketDto.order_id
+        },
+      });
+
+    });
+
   }
 
-  async confirmTicket(id: string) {
-    return await this.prisma.ticket.update({
-      where: { id: id },
-      data: { confirmed: true }
-    });
-  }
+  // async confirmTicket(id: string) {
+  //   return await this.prisma.ticket.update({
+  //     where: { id: id },
+  //     data: { confirmed: true }
+  //   });
+  // }
      
  
 
@@ -61,23 +44,48 @@ export class TicketsService {
     return await this.prisma.ticket.findMany();
   }
 
-  async findOne(id: string) {
+  async findMany(id: string) {
     return await this.prisma.ticket.findUnique({
       where: { id: id }
     });
   }
 
   async update(id: string, updateTicketDto: UpdateTicketDto) {
-    return await this.prisma.ticket.update({
-      where: { id: id },
-      data: updateTicketDto
-    });
+    
   }
 
   async remove(id: string) {
-    return await this.prisma.ticket.delete({
+
+    let ticket = await this.prisma.ticket.findMany({
       where: { id: id }
     });
+
+    if (!ticket) {
+      throw new Error('Ticket not found');
+    }
+    
+    if(ticket.length > 1){
+      await this.prisma.$transaction(async (tx) => {
+        for (const t of ticket) {
+        await tx.ticket.deleteMany({
+          where: { user_id: t.user_id }
+        });
+      }
+      await tx.eventCapacityAllocation.updateMany({
+        where: {
+          id: ticket[0].allocation_id,
+        },        
+        data: {
+          available_seats: { increment: ticket.length },
+        },
+
+      });
+
+      });
+
+    }
+
+    
   }
 }
 
