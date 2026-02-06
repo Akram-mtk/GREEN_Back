@@ -106,7 +106,7 @@ model Ticket {
   Event                   Event                   @relation(fields: [event_id], references: [id])
   Users                   Users                   @relation(fields: [user_id], references: [id])
 
-  @@unique([event_id, user_id])
+  @@unique([event_id, user_id]) //needs to be removed but it will create a problem for the adults tickets, we need to find another solution for this constraint
 }
 
 model order {
@@ -115,7 +115,7 @@ model order {
   event_id      String   @db.Uuid
   group_id      String   @db.Uuid
   allocation_id String   @db.Uuid
-  isMinor       Boolean @default(false)
+  isMinor       Boolean? @default(false)
   created_at    DateTime @default(now()) @db.Timestamptz(0)
 
   Users                   Users                   @relation(fields: [user_id], references: [id])

@@ -18,11 +18,18 @@ constructor(private prisma: PrismaService) {}
     }
   });
 
-  if (!ticket && createOrderDto.isMinor) {
+  const order = await tx.order.findFirst({
+    where: {
+      user_id: createOrderDto.user_id,
+      event_id: createOrderDto.event_id
+    }
+  });
+
+  if ((!ticket && createOrderDto.isMinor) || (!order && createOrderDto.isMinor)) {
     throw new Error('You need to buy the accompanying adult ticket first');
   }
 
-  if (ticket && !createOrderDto.isMinor) {
+  if ((ticket && !createOrderDto.isMinor) || (order && !createOrderDto.isMinor)) {
     throw new Error('User already has a ticket for this event');
   }
 

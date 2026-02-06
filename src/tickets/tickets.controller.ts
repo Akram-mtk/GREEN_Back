@@ -7,32 +7,36 @@ import { UpdateTicketDto } from './dto/update-ticket.dto';
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
-  @Post('create')
-  create(@Body() createTicketDto: CreateTicketDto) {
-    return this.ticketsService.create(createTicketDto);
-  }
+ @Post('create/:order_id')
+create(
+  @Param('order_id') order_id: string,
+  @Body() createTicketDto: CreateTicketDto
+) {
+
+  return this.ticketsService.create(createTicketDto, order_id);
+}
 
   @Get()
   findAll() {
     return this.ticketsService.findAll();
   }
 
-  @Get(':id')
-  findOne(
-    @Param('id') id: string 
-  ) {
-    return this.ticketsService.findOne(id);
-  }
+  // @Get(':id')
+  // findOne(
+  //   @Param('id') id: string 
+  // ) {
+  //   return this.ticketsService.findOne(id);
+  // }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateTicketDto: UpdateTicketDto) {
     return this.ticketsService.update(id, updateTicketDto);
   }
 
-  @Patch('confirm/:id')
-  confirmTicket(@Param('id', ParseUUIDPipe) id: string) {
-    return this.ticketsService.confirmTicket(id);
-  }
+  // @Patch('confirm/:id')
+  // confirmTicket(@Param('id', ParseUUIDPipe) id: string) {
+  //   return this.ticketsService.confirmTicket(id);
+  // }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
