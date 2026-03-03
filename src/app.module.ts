@@ -12,9 +12,12 @@ import { SubscriptionPlanModule } from './subscription_plan/subscription_plan.mo
 import { UserSubscriptionModule } from './user_subscription/user_subscription.module';
 import { TeamModule } from './team/team.module';
 import { AreaModule } from './area/area.module';
+import { OrderModule } from './order/order.module';
+import { OrderCleanerModule } from './order-cleaner/order-cleaner.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [PrismaModule, UsersModule, RfidCardsModule, AuthModule, SubscriptionPlanModule, UserSubscriptionModule, TeamModule, AreaModule, TicketsModule, EventCapacityAllocationsModule, EventsModule],
+  imports: [PrismaModule, UsersModule, RfidCardsModule, AuthModule, SubscriptionPlanModule, UserSubscriptionModule, TeamModule, AreaModule, TicketsModule, EventCapacityAllocationsModule, EventsModule, OrderModule, OrderCleanerModule,ScheduleModule.forRoot()],
   controllers: [AppController],
   providers: [AppService],
 })
