@@ -5,17 +5,17 @@ export class CreateTicketDto {
 
     @IsString()
     @IsNotEmpty()
-    allocation_id: string;
+    allocation_id!: string;
 
     @IsString()
     @IsNotEmpty()
-    user_id: string;
+    user_id!: string;
 
     @IsString()
     @IsNotEmpty()
-    event_id: string;
+    event_id!: string;
 
     @IsBoolean()
-    isMinor: boolean;
+    isMinor!: boolean;
 
 }

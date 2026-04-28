@@ -4,22 +4,22 @@ export class CreateSubscriptionPlanDto {
 
     @IsString()
     @IsNotEmpty()
-    name: string;
+    name!: string;
 
     @IsString()
     @IsNotEmpty()
-    description: string;
+    description!: string;
 
     @IsNumber()
     @IsNotEmpty()
-    price: number;
+    price!: number;
 
     @IsNumber()
     @IsOptional()
-    number_of_entrance: number | null;
+    number_of_entrance?: number | null;
 
     @IsUUID()
     @IsNotEmpty()
-    area_id: string;
+    area_id!: string;
 
 }

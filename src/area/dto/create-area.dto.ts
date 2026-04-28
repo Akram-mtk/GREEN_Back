@@ -4,6 +4,6 @@ export class CreateAreaDto {
   
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
   
 }

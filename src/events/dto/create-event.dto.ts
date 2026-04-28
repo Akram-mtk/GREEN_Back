@@ -4,31 +4,31 @@ export class CreateEventDto {
 
     @IsString()
     @IsNotEmpty()
-    name: string;
+    name!: string;
 
     @IsBoolean()
     @IsNotEmpty()
-    any_gate_entry: boolean;
+    any_gate_entry!: boolean;
 
     @IsDateString()
     @IsNotEmpty()
-    open_at: Date;
+    open_at!: Date;
 
     @IsDateString()
     @IsNotEmpty()
-    close_at: Date;
+    close_at!: Date;
 
     @IsDateString()
     @IsNotEmpty()
-    start_at: Date;
+    start_at!: Date;
 
     @IsUUID()
     @IsNotEmpty()
-    home_team_id: string;
+    home_team_id!: string;
 
     @IsUUID()
     @IsNotEmpty()
-    away_team_id: string;
+    away_team_id!: string;
 
 
 }

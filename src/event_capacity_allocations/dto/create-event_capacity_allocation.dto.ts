@@ -5,15 +5,15 @@ export class CreateEventCapacityAllocationDto {
 
     @IsUUID()
     @IsNotEmpty()
-    event_id: string;
+    event_id!: string;
 
     @IsUUID()
     @IsNotEmpty()
-    area_id: string;
+    area_id!: string;
 
     @IsInt()
     @Min(1)
     @IsNotEmpty()
-    available_seats: number;
+    available_seats!: number;
 
 }

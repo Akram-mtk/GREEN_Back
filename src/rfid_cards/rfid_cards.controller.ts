@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request } from '@nestjs/common';
 import { RfidCardsService } from './rfid_cards.service';
 import { CreateRfidCardDto } from './dto/create-rfid_card.dto';
-import { UpdateRfidCardDto, AssignCardToUserDto } from './dto/update-rfid_card.dto';
+import { AssignCardToUserDto, ScanRfidDto } from './dto/update-rfid_card.dto';
 import { RfidCardEntity } from './entities/rfid_card.entity';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
@@ -22,7 +22,12 @@ export class RfidCardsController {
 
   @Patch('block/:id')
   async blockCard(@Param('id') id: string){
-    return new RfidCardEntity (await this.rfidCardsService.blockCard(id))
+    return new RfidCardEntity(await this.rfidCardsService.blockCard(id))
+  }
+
+  @Post('scan')
+  scan(@Body() scanRfidDto: ScanRfidDto) {
+    return this.rfidCardsService.scan(scanRfidDto);
   }
 
 

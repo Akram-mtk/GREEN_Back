@@ -9,6 +9,6 @@ export class CreateRfidCardDto {
 
   @IsString()
   @IsNotEmpty()
-  card_uid: string;
+  card_uid!: string;
 
 }

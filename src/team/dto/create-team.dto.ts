@@ -4,10 +4,10 @@ export class CreateTeamDto {
 
   @IsString()
   @IsNotEmpty()
-  name: string;
-  
+  name!: string;
+
   @IsString()
   @IsNotEmpty()
-  short_name: string;
+  short_name!: string;
 
 }
