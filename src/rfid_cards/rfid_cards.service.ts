@@ -1,7 +1,7 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateRfidCardDto } from './dto/create-rfid_card.dto';
 import { AssignCardToUserDto, ScanRfidDto, UpdateRfidCardDto } from './dto/update-rfid_card.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CardStatus } from '@prisma/client';
 
 @Injectable()
@@ -74,14 +74,19 @@ export class RfidCardsService {
     });
     if (!event) throw new NotFoundException('Event not found');
 
+    const now = new Date();
+    if (now < event.open_at || now > event.close_at) {
+      throw new ForbiddenException('Event gates are closed');
+    }
+
     const existingEntry = await this.prisma.entryLog.findUnique({
       where: { user_id_event_id: { user_id: ownerId, event_id: scanRfidDto.event_id } },
     });
     if (existingEntry) throw new ConflictException('User already entered this event');
 
-    // Ticket-based entry
-    const ticket = await this.prisma.ticket.findUnique({
-      where: { event_id_user_id: { event_id: scanRfidDto.event_id, user_id: ownerId } },
+    // Ticket-based entry (adult tickets only — minors are linked via parent_ticket_id)
+    const ticket = await this.prisma.ticket.findFirst({
+      where: { event_id: scanRfidDto.event_id, user_id: ownerId, parent_ticket_id: null },
     });
 
     if (ticket && !ticket.used) {
@@ -104,7 +109,10 @@ export class RfidCardsService {
         where: {
           owner_id: ownerId,
           subscription: { area_id: { in: areaIds } },
-          OR: [{ entrance_left: null }, { entrance_left: { gt: 0 } }],
+          AND: [
+            { OR: [{ entrance_left: null }, { entrance_left: { gt: 0 } }] },
+            { OR: [{ expires_at: null }, { expires_at: { gt: now } }] },
+          ],
         },
       });
 
@@ -137,11 +145,11 @@ export class RfidCardsService {
 
   
 
-  update(id: number, updateRfidCardDto: UpdateRfidCardDto) {
+  update(id: string, updateRfidCardDto: UpdateRfidCardDto) {
     return `This action updates a #${id} rfidCard`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} rfidCard`;
   }
 }

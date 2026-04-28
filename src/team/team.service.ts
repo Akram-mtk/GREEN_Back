@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import type { File as MulterFile } from 'multer';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -34,8 +34,7 @@ export class TeamService {
       fs.writeFileSync(filepath, file.buffer);
 
       return team;
-    } catch (error) {
-      // 🔥 UNIQUE constraint failed
+    } catch (error: any) {
       if (error.code === 'P2002') {
         const fields = (error.meta?.target as string[]) ?? [];
 
@@ -64,11 +63,11 @@ export class TeamService {
     });
   }
 
-  update(id: number, updateTeamDto: UpdateTeamDto) {
+  update(id: string, updateTeamDto: UpdateTeamDto) {
     return `This action updates a #${id} team`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} team`;
   }
 }

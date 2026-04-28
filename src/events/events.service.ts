@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class EventsService {
@@ -14,12 +14,14 @@ export class EventsService {
   }
 
   async findAll() {
-    return await this.prisma.event.findMany();
+    return await this.prisma.event.findMany({
+      where: { published: true },
+    });
   }
 
   async findOne(id: string) {
-    return await this.prisma.event.findUnique({
-      where: { id: id }
+    return await this.prisma.event.findFirst({
+      where: { id, published: true },
     });
   }
 

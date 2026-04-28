@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request }
 import { UserSubscriptionService } from './user_subscription.service';
 import { CreateUserSubscriptionDto } from './dto/create-user_subscription.dto';
 import { UpdateUserSubscriptionDto } from './dto/update-user_subscription.dto';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('user-subscription')
 export class UserSubscriptionController {

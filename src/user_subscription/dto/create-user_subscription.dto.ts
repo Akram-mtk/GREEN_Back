@@ -1,13 +1,16 @@
-import {IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsOptional, IsUUID } from 'class-validator';
 
 export class CreateUserSubscriptionDto {
 
-    @IsString()
+    @IsUUID()
     @IsNotEmpty()
     owner_id!: string;
 
-    @IsString()
+    @IsUUID()
     @IsNotEmpty()
     subscription_plan_id!: string;
-    
+
+    @IsOptional()
+    @IsDateString()
+    expires_at?: string;
 }

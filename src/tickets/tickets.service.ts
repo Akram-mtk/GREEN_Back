@@ -17,16 +17,23 @@ export class TicketsService {
   async create(createTicketDto: CreateTicketDto, order_id:string) {
 
     await this.prisma.$transaction(async (tx) => {
-      let parent_ticket= await tx.ticket.findFirst({
+      const parent_ticket = await tx.ticket.findFirst({
         where: {
-          user_id: createTicketDto.user_id,}});
+          user_id: createTicketDto.user_id,
+          event_id: createTicketDto.event_id,
+          parent_ticket_id: null,
+        },
+      });
 
-          if(createTicketDto.isMinor && !parent_ticket){
-            throw new Error('You need to buy the accompanying adult ticket first');
-          }
+      if (createTicketDto.isMinor && !parent_ticket) {
+        throw new Error('You need to buy the accompanying adult ticket first');
+      }
 
       await tx.ticket.create({
-        data: createTicketDto
+        data: {
+          ...createTicketDto,
+          parent_ticket_id: createTicketDto.isMinor ? parent_ticket!.id : null,
+        },
       });
 
       await tx.order.delete({

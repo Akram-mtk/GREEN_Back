@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventCapacityAllocationDto } from './dto/create-event_capacity_allocation.dto';
 import { UpdateEventCapacityAllocationDto } from './dto/update-event_capacity_allocation.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class EventCapacityAllocationsService {

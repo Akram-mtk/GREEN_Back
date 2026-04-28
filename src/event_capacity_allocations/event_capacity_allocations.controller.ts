@@ -7,7 +7,7 @@ import { UpdateEventCapacityAllocationDto } from './dto/update-event_capacity_al
 export class EventCapacityAllocationsController {
   constructor(private readonly eventCapacityAllocationsService: EventCapacityAllocationsService) {}
 
-  @Post('craete')
+  @Post('create')
   create(@Body() createEventCapacityAllocationDto: CreateEventCapacityAllocationDto) {
     return this.eventCapacityAllocationsService.create(createEventCapacityAllocationDto);
   }

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class OrderService {
@@ -35,7 +35,7 @@ constructor(private prisma: PrismaService) {}
 
   const available = await tx.eventCapacityAllocation.updateMany({
     where: {
-      event_id: createOrderDto.event_id,
+      id: createOrderDto.allocation_id,
       available_seats: { gt: 0 }
     },
     data: {

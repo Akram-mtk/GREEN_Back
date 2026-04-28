@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateAreaDto } from './dto/create-area.dto';
 import { UpdateAreaDto } from './dto/update-area.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class AreaService {
@@ -17,7 +17,7 @@ export class AreaService {
     return this.prisma.area.findMany();
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} area`;
   }
 
@@ -28,7 +28,7 @@ export class AreaService {
     });
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} area`;
   }
 }

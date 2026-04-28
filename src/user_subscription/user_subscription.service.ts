@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserSubscriptionDto } from './dto/create-user_subscription.dto';
 import { UpdateUserSubscriptionDto } from './dto/update-user_subscription.dto';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class UserSubscriptionService {
@@ -10,7 +10,7 @@ export class UserSubscriptionService {
   
   async create(createUserSubscriptionDto: CreateUserSubscriptionDto) {
     
-    const { owner_id, subscription_plan_id } = createUserSubscriptionDto;
+    const { owner_id, subscription_plan_id, expires_at } = createUserSubscriptionDto;
 
     const plan = await this.prisma.subscriptionPlan.findUnique({
       where: { id: subscription_plan_id }
@@ -24,7 +24,8 @@ export class UserSubscriptionService {
       data: {
         owner_id,
         subscription_plan_id,
-        entrance_left: plan.number_of_entrance
+        entrance_left: plan.number_of_entrance,
+        expires_at: expires_at ? new Date(expires_at) : null,
       },
     });
   }
@@ -37,15 +38,15 @@ export class UserSubscriptionService {
     })
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return `This action returns a #${id} userSubscription`;
   }
 
-  update(id: number, updateUserSubscriptionDto: UpdateUserSubscriptionDto) {
+  update(id: string, updateUserSubscriptionDto: UpdateUserSubscriptionDto) {
     return `This action updates a #${id} userSubscription`;
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} userSubscription`;
   }
 }

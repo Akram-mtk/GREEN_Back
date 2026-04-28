@@ -56,7 +56,6 @@ model Rfid_cards {
   owner Users? @relation(fields: [owner_id], references: [id])
 }
 
-// FIXME : open_ay, close_at are useless     TF whyyyy 
 model Event {
   id             String   @id @default(uuid()) @db.Uuid
   name           String
@@ -77,7 +76,7 @@ model Event {
   orders                  order[]
 }
 
-// FIXME : contraint available_seats GE 0
+// NOTE: available_seats >= 0 enforced via raw SQL CHECK constraint (see migrations)
 model EventCapacityAllocation {
   id              String @id @default(uuid()) @db.Uuid
   event_id        String @db.Uuid
@@ -93,20 +92,21 @@ model EventCapacityAllocation {
   @@unique([event_id, area_id])
 }
 
-// NOTE : areaID, event_id rahom ziada w nrmlment mns79ohomch 3ljl performance (hadi tcree pb ta3 unique)
 model Ticket {
-  id            String  @id @default(uuid()) @db.Uuid
-  allocation_id String  @db.Uuid
-  user_id       String  @db.Uuid
-  used          Boolean @default(false)
-  event_id      String  @db.Uuid
-  isMinor       Boolean @default(false)
+  id               String  @id @default(uuid()) @db.Uuid
+  allocation_id    String  @db.Uuid
+  user_id          String  @db.Uuid
+  used             Boolean @default(false)
+  event_id         String  @db.Uuid
+  isMinor          Boolean @default(false)
+  parent_ticket_id String? @db.Uuid
+
+  parent_ticket Ticket?  @relation("TicketMinors", fields: [parent_ticket_id], references: [id])
+  minor_tickets Ticket[] @relation("TicketMinors")
 
   EventCapacityAllocation EventCapacityAllocation @relation(fields: [allocation_id], references: [id])
   Event                   Event                   @relation(fields: [event_id], references: [id])
   Users                   Users                   @relation(fields: [user_id], references: [id])
-
-  @@unique([event_id, user_id]) //needs to be removed but it will create a problem for the adults tickets, we need to find another solution for this constraint
 }
 
 model order {
@@ -149,10 +149,11 @@ model SubscriptionPlan {
 
 // FIXME : can a user have two subs at the same time ?
 model UserSubscription {
-  id                   String @id @default(uuid()) @db.Uuid
-  owner_id             String @db.Uuid
-  subscription_plan_id String @db.Uuid
+  id                   String    @id @default(uuid()) @db.Uuid
+  owner_id             String    @db.Uuid
+  subscription_plan_id String    @db.Uuid
   entrance_left        Int?
+  expires_at           DateTime? @db.Timestamptz(0)
 
   owner        Users            @relation(fields: [owner_id], references: [id])
   subscription SubscriptionPlan @relation(fields: [subscription_plan_id], references: [id])

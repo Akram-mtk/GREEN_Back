@@ -3,7 +3,7 @@ import { RfidCardsService } from './rfid_cards.service';
 import { CreateRfidCardDto } from './dto/create-rfid_card.dto';
 import { AssignCardToUserDto, ScanRfidDto } from './dto/update-rfid_card.dto';
 import { RfidCardEntity } from './entities/rfid_card.entity';
-import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 
 @Controller('rfid-cards')
