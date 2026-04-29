@@ -15,10 +15,11 @@ import { StorageModule } from './storage/storage.module';
 import { AreaModule } from './area/area.module';
 import { OrderModule } from './order/order.module';
 import { OrderCleanerModule } from './order-cleaner/order-cleaner.module';
+import { AdvertisementModule } from './advertisement/advertisement.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
-  imports: [PrismaModule, StorageModule, UsersModule, RfidCardsModule, AuthModule, SubscriptionPlanModule, UserSubscriptionModule, TeamModule, AreaModule, TicketsModule, EventCapacityAllocationsModule, EventsModule, OrderModule, OrderCleanerModule,ScheduleModule.forRoot()],
+  imports: [PrismaModule, StorageModule, UsersModule, RfidCardsModule, AuthModule, SubscriptionPlanModule, UserSubscriptionModule, TeamModule, AreaModule, TicketsModule, EventCapacityAllocationsModule, EventsModule, OrderModule, OrderCleanerModule, AdvertisementModule, ScheduleModule.forRoot()],
   controllers: [AppController],
   providers: [AppService],
 })

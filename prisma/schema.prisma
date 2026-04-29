@@ -164,6 +164,15 @@ model UserSubscription {
   subscription SubscriptionPlan @relation(fields: [subscription_plan_id], references: [id])
 }
 
+model Advertisement {
+  id          String @id @default(uuid()) @db.Uuid
+  title       String
+  description String
+  imageUrl    String
+  link        String
+  order       Int
+}
+
 enum CardStatus {
   issued
   active
