@@ -9,29 +9,31 @@ export class OrderCleanerService {
 
     @Cron(CronExpression.EVERY_MINUTE)
     async handleExpiredOrders() {
-
-        let expiredOrders = await this.prisma.order.findMany({
-            where: {
-                created_at: { lt: new Date(Date.now() - 10 * 60 * 1000) }
-            }
+        const expiredOrders = await this.prisma.order.findMany({
+            where: { created_at: { lt: new Date(Date.now() - 10 * 60 * 1000) } },
+            select: { id: true, allocation_id: true },
         });
 
+        if (expiredOrders.length === 0) return;
 
-        for (let order of expiredOrders) {
-             await this.prisma.$transaction(async (tx) => {
-                await tx.order.delete({
-                    where: { id: order.id }
-                });});
+        const allocationCounts = expiredOrders.reduce((acc, order) => {
+            acc[order.allocation_id] = (acc[order.allocation_id] ?? 0) + 1;
+            return acc;
+        }, {} as Record<string, number>);
 
-            Logger.log(`Deleted expired order with ID: ${order.id}`);
+        await this.prisma.$transaction([
+            this.prisma.order.deleteMany({
+                where: { id: { in: expiredOrders.map(o => o.id) } },
+            }),
+            ...Object.entries(allocationCounts).map(([allocation_id, count]) =>
+                this.prisma.eventCapacityAllocation.update({
+                    where: { id: allocation_id },
+                    data: { available_seats: { increment: count } },
+                })
+            ),
+        ]);
 
-             await this.prisma.eventCapacityAllocation.update({
-                where: { id: order.allocation_id },
-                data: {
-                    available_seats: { increment: 1 }
-                }
-            })
-        }
+        Logger.log(`Deleted ${expiredOrders.length} expired orders`);
     }
 
 }

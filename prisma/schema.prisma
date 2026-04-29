@@ -37,8 +37,9 @@ model EntryLog {
 }
 
 model Area {
-  id   String @id @default(uuid()) @db.Uuid
-  name String
+  id        String    @id @default(uuid()) @db.Uuid
+  name      String
+  deletedAt DateTime?
 
   EventCapacityAllocation EventCapacityAllocation[]
   subscriptionPlans       SubscriptionPlan[]
@@ -46,26 +47,29 @@ model Area {
 
 
 model Rfid_cards {
-  id         String     @id @default(uuid()) @db.Uuid
-  owner_id   String?    @db.Uuid
-  card_uid   String     @unique @db.VarChar(64)
-  status     CardStatus @default(issued)
-  created_at DateTime   @default(now()) @db.Timestamptz(0)
-  updated_at DateTime   @updatedAt @db.Timestamptz(0)
+  id          String     @id @default(uuid()) @db.Uuid
+  owner_id    String?    @db.Uuid
+  card_uid    String     @unique @db.VarChar(64)
+  card_secret String     @unique @db.VarChar(64)
+  claim_code  String?    @unique @db.VarChar(64)
+  status      CardStatus @default(issued)
+  created_at  DateTime   @default(now()) @db.Timestamptz(0)
+  updated_at  DateTime   @updatedAt @db.Timestamptz(0)
 
   owner Users? @relation(fields: [owner_id], references: [id])
 }
 
 model Event {
-  id             String   @id @default(uuid()) @db.Uuid
+  id             String    @id @default(uuid()) @db.Uuid
   name           String
   any_gate_entry Boolean
   open_at        DateTime
   close_at       DateTime
   start_at       DateTime
-  home_team_id   String   @db.Uuid
-  away_team_id   String   @db.Uuid
-  published      Boolean  @default(false)
+  home_team_id   String    @db.Uuid
+  away_team_id   String    @db.Uuid
+  published      Boolean   @default(false)
+  deletedAt      DateTime?
 
   home_team Team @relation("HomeTeam", fields: [home_team_id], references: [id])
   away_team Team @relation("AwayTeam", fields: [away_team_id], references: [id])

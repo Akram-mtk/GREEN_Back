@@ -12,10 +12,10 @@ export class EventCapacityAllocationsController {
     return this.eventCapacityAllocationsService.create(createEventCapacityAllocationDto);
   }
 
-  @Get('getAll')
-  findAll() {
-    return this.eventCapacityAllocationsService.findAll();
-  }
+//   @Get('getAll')
+//   findAll() {
+//     return this.eventCapacityAllocationsService.findAll();
+//   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -15,26 +15,29 @@ export class EventsService {
 
   async findAll() {
     return await this.prisma.event.findMany({
-      where: { published: true },
+      where: { published: true, deletedAt: null },
     });
   }
 
   async findOne(id: string) {
     return await this.prisma.event.findFirst({
-      where: { id, published: true },
+      where: { id, published: true, deletedAt: null },
     });
   }
 
   async update(id: string, updateEventDto: UpdateEventDto) {
+    const event = await this.prisma.event.findUnique({ where: { id } });
+    if (event?.published) throw new BadRequestException('Cannot update a published event');
     return await this.prisma.event.update({
-      where: { id: id },
-      data: updateEventDto
+      where: { id },
+      data: updateEventDto,
     });
   }
 
   async remove(id: string) {
-    return await this.prisma.event.delete({
-      where: { id: id }
+    return await this.prisma.event.update({
+      where: { id },
+      data: { deletedAt: new Date() },
     });
   }
 }

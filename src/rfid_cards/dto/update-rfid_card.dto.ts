@@ -9,19 +9,19 @@ export class UpdateRfidCardDto extends PartialType(CreateRfidCardDto) {
 }
 
 export class AssignCardToUserDto {
-  @IsUUID()
+  @IsString()
   @IsNotEmpty()
-  userId!: string;
-
-  @IsUUID()
-  @IsNotEmpty()
-  rfidCardId!: string;
+  claim_code!: string;
 }
 
 export class ScanRfidDto {
   @IsString()
   @IsNotEmpty()
   card_uid!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  card_secret!: string;
 
   @IsUUID()
   @IsNotEmpty()

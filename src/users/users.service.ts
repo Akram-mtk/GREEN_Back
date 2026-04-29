@@ -23,7 +23,7 @@ export class UsersService {
       return await this.prisma.users.create({
         data: createUserDto
       })
-    }catch (err){
+    }catch (err: any){
       if (err.code === 'P2002' && err.meta?.target?.includes('email')) {
         throw new ConflictException('Email already used');
       }

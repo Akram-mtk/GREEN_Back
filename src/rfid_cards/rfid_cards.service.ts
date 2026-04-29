@@ -1,48 +1,47 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { createHash, randomBytes } from 'crypto';
 import { CreateRfidCardDto } from './dto/create-rfid_card.dto';
 import { AssignCardToUserDto, ScanRfidDto, UpdateRfidCardDto } from './dto/update-rfid_card.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { CardStatus } from '@prisma/client';
 
+function sha256(value: string): string {
+  return createHash('sha256').update(value).digest('hex');
+}
+
 @Injectable()
 export class RfidCardsService {
-  
-  constructor(private prisma: PrismaService){}
-  
-  
+
+  constructor(private prisma: PrismaService) {}
+
   async create(createRfidCardDto: CreateRfidCardDto) {
-    return this.prisma.rfid_cards.create({
-      data: createRfidCardDto
-    })
-  }
-  
-  // NOTE : what if the user have been deleted means card.user_id set to null
-  async assign(assignCardToUserDto: AssignCardToUserDto) {
-    // Fetch the existing card
-    const card = await this.prisma.rfid_cards.findUnique({
-        where: { id: assignCardToUserDto.rfidCardId },
-        select: { owner_id: true },
+    const plaintextClaimCode  = randomBytes(5).toString('hex');   // 10 hex chars
+    const plaintextCardSecret = randomBytes(32).toString('hex');  // 64 hex chars
+
+    const card = await this.prisma.rfid_cards.create({
+      data: {
+        card_uid:    createRfidCardDto.card_uid,
+        card_secret: sha256(plaintextCardSecret),
+        claim_code:  sha256(plaintextClaimCode),
+      },
     });
 
-    if (!card) {
-        throw new NotFoundException('Card not found');
-    }
+    // Return plaintext values once — admin writes card_secret to card's secure memory
+    return { ...card, claim_code: plaintextClaimCode, card_secret: plaintextCardSecret };
+  }
 
-    // Prevent reassignment
-    if (card.owner_id !== null  ) {
-        throw new BadRequestException('This card is already assigned to a user');
-    }
+  async assign(assignCardToUserDto: AssignCardToUserDto, userId: string) {
+    const card = await this.prisma.rfid_cards.findFirst({
+      where: { claim_code: sha256(assignCardToUserDto.claim_code), owner_id: null },
+    });
+
+    if (!card) throw new NotFoundException('Invalid or already used claim code');
 
     return this.prisma.rfid_cards.update({
-        where: { id: assignCardToUserDto.rfidCardId },
-        data: { 
-          owner_id: assignCardToUserDto.userId,
-          status: CardStatus.active
-        }
+      where: { id: card.id },
+      data: { owner_id: userId, status: CardStatus.active, claim_code: null },
     });
   }
-
-
 
   async blockCard(identifier: string) {
     const card = await this.prisma.rfid_cards.findFirst({
@@ -57,10 +56,9 @@ export class RfidCardsService {
     });
   }
 
-
-  async findOne(id: string) {
+  async findOne(userId: string) {
     return await this.prisma.rfid_cards.findFirst({
-      where: { owner_id: id, status: CardStatus.active },
+      where: { owner_id: userId, status: CardStatus.active },
     });
   }
 
@@ -70,6 +68,7 @@ export class RfidCardsService {
     });
 
     if (!card) throw new NotFoundException('RFID card not found');
+    if (card.card_secret !== sha256(scanRfidDto.card_secret)) throw new ForbiddenException('Invalid card secret');
     if (card.status !== CardStatus.active) throw new ForbiddenException('Card is not active');
     if (!card.owner_id) throw new ForbiddenException('Card has no owner');
 
@@ -139,17 +138,9 @@ export class RfidCardsService {
     throw new ForbiddenException('No valid ticket or subscription for this event');
   }
 
-
-
-
-
-
   findAll() {
     return `This action returns all rfidCards`;
   }
-
-
-  
 
   update(id: string, updateRfidCardDto: UpdateRfidCardDto) {
     return `This action updates a #${id} rfidCard`;
