@@ -23,6 +23,7 @@ model Users {
   Subscription UserSubscription[]
   Ticket       Ticket[]
   orders       order[]
+  orderItems   OrderItem[]
 }
 
 model EntryLog {
@@ -99,32 +100,45 @@ model EventCapacityAllocation {
 model Ticket {
   id               String  @id @default(uuid()) @db.Uuid
   allocation_id    String  @db.Uuid
-  user_id          String  @db.Uuid
+  user_id          String? @db.Uuid
   used             Boolean @default(false)
   event_id         String  @db.Uuid
   isMinor          Boolean @default(false)
   parent_ticket_id String? @db.Uuid
+  minor_full_name  String?
 
   parent_ticket Ticket?  @relation("TicketMinors", fields: [parent_ticket_id], references: [id])
   minor_tickets Ticket[] @relation("TicketMinors")
 
   EventCapacityAllocation EventCapacityAllocation @relation(fields: [allocation_id], references: [id])
   Event                   Event                   @relation(fields: [event_id], references: [id])
-  Users                   Users                   @relation(fields: [user_id], references: [id])
+  Users                   Users?                  @relation(fields: [user_id], references: [id])
 }
 
 model order {
   id            String   @id @default(uuid()) @db.Uuid
   user_id       String   @db.Uuid
   event_id      String   @db.Uuid
-  group_id      String   @db.Uuid
   allocation_id String   @db.Uuid
-  isMinor       Boolean? @default(false)
   created_at    DateTime @default(now()) @db.Timestamptz(0)
 
   Users                   Users                   @relation(fields: [user_id], references: [id])
   Event                   Event                   @relation(fields: [event_id], references: [id])
   EventCapacityAllocation EventCapacityAllocation @relation(fields: [allocation_id], references: [id])
+  companions              OrderItem[]
+
+  @@unique([user_id, event_id])
+}
+
+model OrderItem {
+  id              String  @id @default(uuid()) @db.Uuid
+  order_id        String  @db.Uuid
+  isMinor         Boolean @default(false)
+  user_id         String? @db.Uuid
+  minor_full_name String?
+
+  order order  @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  Users Users? @relation(fields: [user_id], references: [id])
 }
 
 model Team {

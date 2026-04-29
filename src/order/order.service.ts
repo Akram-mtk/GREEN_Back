@@ -1,140 +1,96 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class OrderService {
-constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
- async create(createOrderDto: CreateOrderDto) {
-  let max_minors = 5;
-    await this.prisma.$transaction(async (tx) => {
+  async create(dto: CreateOrderDto) {
+    return this.prisma.$transaction(async (tx) => {
+      // Collision check — buyer
+      const [buyerTicket, buyerOrder] = await Promise.all([
+        tx.ticket.findFirst({ where: { user_id: dto.user_id, event_id: dto.event_id } }),
+        tx.order.findFirst({ where: { user_id: dto.user_id, event_id: dto.event_id } }),
+      ]);
+      if (buyerTicket || buyerOrder) {
+        throw new ConflictException('User already has a ticket or pending order for this event');
+      }
 
-  const ticket = await tx.ticket.findFirst({
-    where: {
-      user_id: createOrderDto.user_id,
-      event_id: createOrderDto.event_id
-    }
-  });
+      // Collision check — adult companions
+      const adultCompanionIds = dto.companions
+        .filter(c => !c.isMinor)
+        .map(c => c.user_id!);
+      if (adultCompanionIds.length) {
+        const [companionTicket, companionOrderItem] = await Promise.all([
+          tx.ticket.findFirst({ where: { user_id: { in: adultCompanionIds }, event_id: dto.event_id } }),
+          tx.orderItem.findFirst({ where: { user_id: { in: adultCompanionIds }, order: { event_id: dto.event_id } } }),
+        ]);
+        if (companionTicket || companionOrderItem) {
+          throw new ConflictException('One or more companions already have a ticket or pending order for this event');
+        }
+      }
 
-  const order = await tx.order.findFirst({
-    where: {
-      user_id: createOrderDto.user_id,
-      event_id: createOrderDto.event_id
-    }
-  });
+      // Capacity decrement
+      const totalSeats = 1 + dto.companions.length;
+      const updated = await tx.eventCapacityAllocation.updateMany({
+        where: { id: dto.allocation_id, available_seats: { gte: totalSeats } },
+        data: { available_seats: { decrement: totalSeats } },
+      });
+      if (updated.count === 0) {
+        throw new ConflictException('SOLD_OUT: Not enough seats available');
+      }
 
-  if ((!ticket && createOrderDto.isMinor) || (!order && createOrderDto.isMinor)) {
-    throw new Error('You need to buy the accompanying adult ticket first');
+      // Create order + companions atomically
+      return tx.order.create({
+        data: {
+          user_id: dto.user_id,
+          event_id: dto.event_id,
+          allocation_id: dto.allocation_id,
+          companions: {
+            create: dto.companions.map(c => ({
+              isMinor: c.isMinor,
+              user_id: c.isMinor ? null : c.user_id,
+              minor_full_name: c.isMinor ? c.minor_full_name : null,
+            })),
+          },
+        },
+        include: { companions: true },
+      });
+    });
   }
-
-  if ((ticket && !createOrderDto.isMinor) || (order && !createOrderDto.isMinor)) {
-    throw new Error('User already has a ticket for this event');
-  }
-
-  const available = await tx.eventCapacityAllocation.updateMany({
-    where: {
-      id: createOrderDto.allocation_id,
-      available_seats: { gt: 0 }
-    },
-    data: {
-      available_seats: { decrement: 1 }
-    }
-  });
-
-  if (available.count === 0) {
-    throw new Error('SOLD_OUT: No seats available for this event.');
-  }
-
-  return tx.order.create({
-    data: createOrderDto
-  });
-});
-
-
-
-      
-    
-    
-
-  }
-
-  // async findAll() {
-  //   return await this.prisma.order.findMany();
-  // }
 
   async findOne(id: string) {
-    return await this.prisma.order.findUnique({
-      where: { id: id },
+    return this.prisma.order.findUnique({
+      where: { id },
+      include: { companions: true },
     });
   }
 
-  // async update(id: string, updateOrderDto: UpdateOrderDto) {
-  //   if(updateOrderDto.user_id){
-  //     let userTicket=await this.prisma.ticket.findFirst({
-  //       where: { user_id: updateOrderDto.user_id}});
-  //       if(userTicket){
-  //       throw new Error('User already has a ticket for this event');
-  //       }
-  //   }else if(updateOrderDto.isMinor){
-
-  //   }
-    
-
-  //   return await this.prisma.order.update({
-  //     where: { id: id },
-  //     data: updateOrderDto,
-  //   });
-  // }
+  async findByUser(user_id: string) {
+    return this.prisma.order.findMany({
+      where: { user_id },
+      include: { companions: true },
+    });
+  }
 
   async remove(id: string) {
-  await this.prisma.$transaction(async (tx) => {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id },
+        include: { _count: { select: { companions: true } } },
+      });
+      if (!order) throw new NotFoundException('Order not found');
 
-    const order = await tx.order.findUnique({
-      where: { id },
-    });
+      const seatsToRestore = 1 + order._count.companions;
 
-    if (!order) {
-      throw new Error('Order not found');
-    }
-
-    let seatsToRestore = 1; // the order itself
-
-    if (!order.isMinor) {
-      const minors = await tx.order.findMany({
-        where: {
-          user_id: order.user_id,
-          event_id: order.event_id,
-          isMinor: true,
-        },
-        select: { id: true },
+      await tx.eventCapacityAllocation.update({
+        where: { id: order.allocation_id },
+        data: { available_seats: { increment: seatsToRestore } },
       });
 
-      if (minors.length > 0) {
-        seatsToRestore += minors.length;
-
-        await tx.order.deleteMany({
-          where: {
-            id: { in: minors.map(m => m.id) },
-          },
-        });
-      }
-    }
-
-    await tx.eventCapacityAllocation.updateMany({
-      where: {
-        id: order.allocation_id,
-      },
-      data: {
-        available_seats: { increment: seatsToRestore },
-      },
+      await tx.order.delete({ where: { id } }); // cascades to OrderItems
     });
-
-    await tx.order.delete({
-      where: { id },
-    });
-  });
-}
-
+  }
 }

@@ -8,34 +8,39 @@ export class TicketsService {
 
   async create(order_id: string) {
     await this.prisma.$transaction(async (tx) => {
-      const order = await tx.order.findUnique({ where: { id: order_id } });
+      const order = await tx.order.findUnique({
+        where: { id: order_id },
+        include: { companions: true },
+      });
       if (!order) throw new NotFoundException('Order not found');
 
-      const parent_ticket = order.isMinor
-        ? await tx.ticket.findFirst({
-            where: {
-              user_id: order.user_id,
-              event_id: order.event_id,
-              parent_ticket_id: null,
-            },
-          })
-        : null;
-
-      if (order.isMinor && !parent_ticket) {
-        throw new NotFoundException('You need to buy the accompanying adult ticket first');
-      }
-
-      await tx.ticket.create({
+      // Buyer ticket
+      const buyerTicket = await tx.ticket.create({
         data: {
           user_id: order.user_id,
           event_id: order.event_id,
           allocation_id: order.allocation_id,
-          isMinor: order.isMinor ?? false,
-          parent_ticket_id: order.isMinor ? parent_ticket!.id : null,
+          isMinor: false,
+          parent_ticket_id: null,
+          minor_full_name: null,
         },
       });
 
-      await tx.order.delete({ where: { id: order_id } });
+      // Companion tickets
+      await Promise.all(order.companions.map(companion =>
+        tx.ticket.create({
+          data: {
+            user_id: companion.isMinor ? null : companion.user_id,
+            event_id: order.event_id,
+            allocation_id: order.allocation_id,
+            isMinor: companion.isMinor,
+            parent_ticket_id: companion.isMinor ? buyerTicket.id : null,
+            minor_full_name: companion.isMinor ? companion.minor_full_name : null,
+          },
+        })
+      ));
+
+      await tx.order.delete({ where: { id: order_id } }); // cascades to OrderItems
     });
   }
 
