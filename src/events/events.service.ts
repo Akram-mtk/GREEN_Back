@@ -16,12 +16,21 @@ export class EventsService {
   async findAll() {
     return await this.prisma.event.findMany({
       where: { published: true, deletedAt: null },
+      include: { home_team: true, away_team: true },
     });
   }
 
   async findOne(id: string) {
     return await this.prisma.event.findFirst({
       where: { id, published: true, deletedAt: null },
+      include: { home_team: true, away_team: true },
+    });
+  }
+
+  async publish(id: string) {
+    return await this.prisma.event.update({
+      where: { id },
+      data: { published: true },
     });
   }
 

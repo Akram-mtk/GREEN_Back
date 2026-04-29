@@ -1,7 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import * as bcrypt from 'bcrypt';
 import 'dotenv/config';
 
@@ -37,6 +38,26 @@ export class UsersService {
       where: { id },
       data: updateUserDto
     })
+  }
+
+  async changePassword(id: string, dto: ChangePasswordDto): Promise<{ message: string }> {
+    const saltRounds = Number(process.env.BCRYPT_SALT_ROUNDS);
+    if (!saltRounds || isNaN(saltRounds)) {
+      throw new Error('BCRYPT_SALT_ROUNDS must be set and numeric');
+    }
+
+    const user = await this.prisma.users.findUnique({ where: { id } });
+    if (!user) throw new UnauthorizedException('User not found');
+
+    const isMatch = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!isMatch) throw new UnauthorizedException('Incorrect current password');
+
+    const hashedNew = await bcrypt.hash(dto.newPassword, saltRounds);
+    await this.prisma.users.update({
+      where: { id },
+      data: { password: hashedNew },
+    });
+    return { message: 'Password changed successfully' };
   }
 
   async findByEmail(email: string) {

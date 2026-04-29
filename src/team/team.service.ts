@@ -1,51 +1,39 @@
-import { Injectable, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException, NotFoundException, Inject } from '@nestjs/common';
 import { CreateTeamDto } from './dto/create-team.dto';
 import { UpdateTeamDto } from './dto/update-team.dto';
 import { PrismaService } from '../prisma/prisma.service';
+import { STORAGE_SERVICE } from '../storage/storage.interface';
+import type { IStorageService } from '../storage/storage.interface';
 import type { File as MulterFile } from 'multer';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class TeamService {
 
-  constructor(private prisma: PrismaService) {}
-  
+  constructor(
+    private prisma: PrismaService,
+    @Inject(STORAGE_SERVICE) private storageService: IStorageService,
+  ) {}
+
   async create(createTeamDto: CreateTeamDto, file?: MulterFile) {
-    if (!file) {throw new BadRequestException('Image file is required');}
+    if (!file) throw new BadRequestException('Image file is required');
 
-    const uploadDir = path.join(process.cwd(), 'uploads/teams');
-
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    const ext = file.originalname.split('.').pop();
-    const filename = `${unique}.${ext}`;
-    const filepath = path.join(uploadDir, filename);
+    const imageUrl = await this.storageService.upload(file, 'teams');
 
     try {
-      const team = await this.prisma.team.create({
+      return await this.prisma.team.create({
         data: {
           name: createTeamDto.name.trim(),
           short_name: createTeamDto.short_name.trim(),
-          imageUrl: filename,
+          imageUrl,
         },
       });
-
-      fs.mkdirSync(uploadDir, { recursive: true });
-      fs.writeFileSync(filepath, file.buffer);
-
-      return team;
     } catch (error: any) {
+      await this.storageService.delete(imageUrl);
+
       if (error.code === 'P2002') {
         const fields = (error.meta?.target as string[]) ?? [];
-
-        if (fields.includes('name')) {
-          throw new ConflictException('Team name already exists');
-        }
-
-        if (fields.includes('short_name')) {
-          throw new ConflictException('Team short name already exists');
-        }
-
+        if (fields.includes('name')) throw new ConflictException('Team name already exists');
+        if (fields.includes('short_name')) throw new ConflictException('Team short name already exists');
         throw new ConflictException('Team already exists');
       }
 
@@ -54,20 +42,26 @@ export class TeamService {
   }
 
   findAll() {
-    return this.prisma.team.findMany();
+    return this.prisma.team.findMany({ where: { deletedAt: null } });
   }
 
   findOne(id: string) {
-    return this.prisma.team.findUnique({
-        where: { id: id }
-    });
+    return this.prisma.team.findFirst({ where: { id, deletedAt: null } });
   }
 
   update(id: string, updateTeamDto: UpdateTeamDto) {
     return `This action updates a #${id} team`;
   }
 
-  remove(id: string) {
-    return `This action removes a #${id} team`;
+  async remove(id: string) {
+    const team = await this.prisma.team.findFirst({ where: { id, deletedAt: null } });
+    if (!team) throw new NotFoundException('Team not found');
+
+    await this.storageService.delete(team.imageUrl);
+
+    return this.prisma.team.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
   }
 }

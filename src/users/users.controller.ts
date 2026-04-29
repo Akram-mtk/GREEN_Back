@@ -2,6 +2,7 @@ import { Body, Controller, Post, Patch, Param, UseGuards, Request, ForbiddenExce
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { UserEntity } from './entities/user.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -18,6 +19,15 @@ export class UsersController {
     @Request() req: any
   ) {
     return new UserEntity(await this.userService.update(req.user.userId, updateUserDto));
+  }
+
+  @Patch('change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(
+    @Body() changePasswordDto: ChangePasswordDto,
+    @Request() req: any
+  ) {
+    return this.userService.changePassword(req.user.userId, changePasswordDto);
   }
 
 

@@ -32,10 +32,9 @@ export class UserSubscriptionService {
 
   findAll(user_id: string) {
     return this.prisma.userSubscription.findMany({
-      where: {
-        owner_id: user_id
-    }
-    })
+      where: { owner_id: user_id },
+      include: { subscription: { include: { area: true } } },
+    });
   }
 
   findOne(id: string) {

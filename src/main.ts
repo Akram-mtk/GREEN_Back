@@ -10,10 +10,9 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
 
-  app.use(
-    '/uploads',
-    express.static(join(process.cwd(), 'uploads')),
-  );
+  if (process.env.STORAGE_PROVIDER === 'local') {
+    app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
+  }
 
   // Global validation (DTOs)
   app.useGlobalPipes(

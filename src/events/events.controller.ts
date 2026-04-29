@@ -22,6 +22,11 @@ export class EventsController {
     return this.eventsService.findOne(id);
   }
 
+  @Patch(':id/publish')
+  publish(@Param('id') id: string) {
+    return this.eventsService.publish(id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
     return this.eventsService.update(id, updateEventDto);

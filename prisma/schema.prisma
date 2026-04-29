@@ -128,10 +128,11 @@ model order {
 }
 
 model Team {
-  id         String @id @default(uuid()) @db.Uuid
-  name       String @unique
-  short_name String @unique
+  id         String    @id @default(uuid()) @db.Uuid
+  name       String    @unique
+  short_name String    @unique
   imageUrl   String
+  deletedAt  DateTime?
 
   home_events Event[] @relation("HomeTeam")
   away_events Event[] @relation("AwayTeam")

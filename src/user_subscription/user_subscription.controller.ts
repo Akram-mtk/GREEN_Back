@@ -14,7 +14,6 @@ export class UserSubscriptionController {
     return this.userSubscriptionService.create(createUserSubscriptionDto);
   }
 
-  // FIXME : thsi should return a proper data
   @UseGuards(JwtAuthGuard)
   @Get()
   findAll(@Request() req: any) {
