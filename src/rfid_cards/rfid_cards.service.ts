@@ -44,10 +44,16 @@ export class RfidCardsService {
 
 
 
-  async blockCard(id: string) {
+  async blockCard(identifier: string) {
+    const card = await this.prisma.rfid_cards.findFirst({
+      where: { OR: [{ id: identifier }, { card_uid: identifier }] },
+    });
+
+    if (!card) throw new NotFoundException('Card not found');
+
     return this.prisma.rfid_cards.update({
-      where: { id: id },
-      data: { status: CardStatus.blocked }
+      where: { id: card.id },
+      data: { status: CardStatus.blocked },
     });
   }
 

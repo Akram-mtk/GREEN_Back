@@ -1,20 +1,15 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
-import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 
 @Controller('tickets')
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
- @Post('create/:order_id')
-create(
-  @Param('order_id') order_id: string,
-  @Body() createTicketDto: CreateTicketDto
-) {
-
-  return this.ticketsService.create(createTicketDto, order_id);
-}
+  @Post('create/:order_id')
+  create(@Param('order_id') order_id: string) {
+    return this.ticketsService.create(order_id);
+  }
 
   @Get()
   findAll() {

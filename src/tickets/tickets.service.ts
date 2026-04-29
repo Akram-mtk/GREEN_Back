@@ -1,49 +1,42 @@
-import { Injectable } from '@nestjs/common';
-import { CreateTicketDto } from './dto/create-ticket.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { PrismaService } from '../prisma/prisma.service';
-
-// utils/sleep.ts or a similar utility file
-export const sleep = (ms: number) => {
-  return new Promise(resolve => setTimeout(resolve, ms));
-};
 
 @Injectable()
 export class TicketsService {
   constructor(private prisma: PrismaService) {}
 
-
-  
-  async create(createTicketDto: CreateTicketDto, order_id:string) {
-
+  async create(order_id: string) {
     await this.prisma.$transaction(async (tx) => {
-      const parent_ticket = await tx.ticket.findFirst({
-        where: {
-          user_id: createTicketDto.user_id,
-          event_id: createTicketDto.event_id,
-          parent_ticket_id: null,
-        },
-      });
+      const order = await tx.order.findUnique({ where: { id: order_id } });
+      if (!order) throw new NotFoundException('Order not found');
 
-      if (createTicketDto.isMinor && !parent_ticket) {
-        throw new Error('You need to buy the accompanying adult ticket first');
+      const parent_ticket = order.isMinor
+        ? await tx.ticket.findFirst({
+            where: {
+              user_id: order.user_id,
+              event_id: order.event_id,
+              parent_ticket_id: null,
+            },
+          })
+        : null;
+
+      if (order.isMinor && !parent_ticket) {
+        throw new NotFoundException('You need to buy the accompanying adult ticket first');
       }
 
       await tx.ticket.create({
         data: {
-          ...createTicketDto,
-          parent_ticket_id: createTicketDto.isMinor ? parent_ticket!.id : null,
+          user_id: order.user_id,
+          event_id: order.event_id,
+          allocation_id: order.allocation_id,
+          isMinor: order.isMinor ?? false,
+          parent_ticket_id: order.isMinor ? parent_ticket!.id : null,
         },
       });
 
-      await tx.order.delete({
-        where : {
-          id : order_id
-        },
-      });
-
+      await tx.order.delete({ where: { id: order_id } });
     });
-
   }
 
   // async confirmTicket(id: string) {
