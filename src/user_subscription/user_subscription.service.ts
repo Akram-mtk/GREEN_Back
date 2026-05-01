@@ -10,7 +10,7 @@ export class UserSubscriptionService {
   
   async create(createUserSubscriptionDto: CreateUserSubscriptionDto) {
     
-    const { owner_id, subscription_plan_id, expires_at } = createUserSubscriptionDto;
+    const { owner_id, subscription_plan_id } = createUserSubscriptionDto;
 
     const plan = await this.prisma.subscriptionPlan.findUnique({
       where: { id: subscription_plan_id }
@@ -25,7 +25,6 @@ export class UserSubscriptionService {
         owner_id,
         subscription_plan_id,
         entrance_left: plan.number_of_entrance,
-        expires_at: expires_at ? new Date(expires_at) : null,
       },
     });
   }

@@ -1,4 +1,4 @@
-import {IsOptional,IsNotEmpty, IsString, IsNumber, IsUUID } from 'class-validator';
+import { IsOptional, IsNotEmpty, IsString, IsNumber, IsUUID, IsDateString } from 'class-validator';
 
 export class CreateSubscriptionPlanDto {
 
@@ -21,5 +21,9 @@ export class CreateSubscriptionPlanDto {
     @IsUUID()
     @IsNotEmpty()
     area_id!: string;
+
+    @IsDateString()
+    @IsNotEmpty()
+    expires_at!: string;
 
 }

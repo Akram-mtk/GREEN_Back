@@ -113,11 +113,11 @@ export class RfidCardsService {
       const subscription = await this.prisma.userSubscription.findFirst({
         where: {
           owner_id: ownerId,
-          subscription: { area_id: { in: areaIds } },
-          AND: [
-            { OR: [{ entrance_left: null }, { entrance_left: { gt: 0 } }] },
-            { OR: [{ expires_at: null }, { expires_at: { gt: now } }] },
-          ],
+          subscription: {
+            area_id: { in: areaIds },
+            expires_at: { gt: now },
+          },
+          OR: [{ entrance_left: null }, { entrance_left: { gt: 0 } }],
         },
       });
 

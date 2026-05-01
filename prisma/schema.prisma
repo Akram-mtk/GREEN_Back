@@ -153,13 +153,14 @@ model Team {
 }
 
 model SubscriptionPlan {
-  id                 String  @id @default(uuid()) @db.Uuid
+  id                 String   @id @default(uuid()) @db.Uuid
   name               String
   description        String?
-  price              Decimal @db.Decimal(10, 2)
+  price              Decimal  @db.Decimal(10, 2)
   number_of_entrance Int?
-  area_id            String  @db.Uuid
-  is_active          Boolean @default(true)
+  area_id            String   @db.Uuid
+  is_active          Boolean  @default(true)
+  expires_at         DateTime @db.Timestamptz(0)
 
   area Area @relation(fields: [area_id], references: [id])
 
@@ -168,11 +169,10 @@ model SubscriptionPlan {
 
 // FIXME : can a user have two subs at the same time ?
 model UserSubscription {
-  id                   String    @id @default(uuid()) @db.Uuid
-  owner_id             String    @db.Uuid
-  subscription_plan_id String    @db.Uuid
+  id                   String @id @default(uuid()) @db.Uuid
+  owner_id             String @db.Uuid
+  subscription_plan_id String @db.Uuid
   entrance_left        Int?
-  expires_at           DateTime? @db.Timestamptz(0)
 
   owner        Users            @relation(fields: [owner_id], references: [id])
   subscription SubscriptionPlan @relation(fields: [subscription_plan_id], references: [id])
