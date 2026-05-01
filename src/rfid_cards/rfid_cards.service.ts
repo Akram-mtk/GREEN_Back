@@ -97,6 +97,11 @@ export class RfidCardsService {
     if (ticket && !ticket.used) {
       await this.prisma.$transaction(async (tx) => {
         await tx.ticket.update({ where: { id: ticket.id }, data: { used: true } });
+        // Mark all RFID-order minor tickets linked to this parent ticket as used
+        await tx.ticket.updateMany({
+          where: { parent_ticket_id: ticket.id, used: false },
+          data: { used: true },
+        });
         await tx.entryLog.create({ data: { user_id: ownerId, event_id: scanRfidDto.event_id } });
       });
       return { access: 'granted', method: 'ticket' };

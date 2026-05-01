@@ -1,20 +1,32 @@
-import { IsUUID, IsNotEmpty, IsArray, IsBoolean, IsString,
-         IsOptional, ValidateIf, ValidateNested } from 'class-validator';
+import {
+  IsUUID, IsNotEmpty, IsArray, IsBoolean, IsString,
+  IsOptional, IsInt, Min, ArrayMinSize, ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
-export class CreateCompanionDto {
+export class CreateAttendeeDto {
   @IsBoolean()
   isMinor: boolean;
 
-  @ValidateIf(o => !o.isMinor)
-  @IsNotEmpty()
-  @IsUUID()
-  user_id?: string;
-
-  @ValidateIf(o => o.isMinor)
-  @IsNotEmpty()
+  /** RFID adults only */
+  @IsOptional()
   @IsString()
-  minor_full_name?: string;
+  card_uid?: string;
+
+  /** Name adults + minors */
+  @IsOptional()
+  @IsString()
+  first_name?: string;
+
+  @IsOptional()
+  @IsString()
+  last_name?: string;
+
+  /** Minors only: 0-based index of the supervising adult in the attendees array */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  parent_index?: number;
 }
 
 export class CreateOrderDto {
@@ -31,7 +43,8 @@ export class CreateOrderDto {
   allocation_id: string;
 
   @IsArray()
+  @ArrayMinSize(1)
   @ValidateNested({ each: true })
-  @Type(() => CreateCompanionDto)
-  companions: CreateCompanionDto[];
+  @Type(() => CreateAttendeeDto)
+  attendees: CreateAttendeeDto[];
 }

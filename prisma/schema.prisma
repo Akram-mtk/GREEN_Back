@@ -105,7 +105,9 @@ model Ticket {
   event_id         String  @db.Uuid
   isMinor          Boolean @default(false)
   parent_ticket_id String? @db.Uuid
-  minor_full_name  String?
+  first_name       String?
+  last_name        String?
+  qr_code          String?
 
   parent_ticket Ticket?  @relation("TicketMinors", fields: [parent_ticket_id], references: [id])
   minor_tickets Ticket[] @relation("TicketMinors")
@@ -131,14 +133,18 @@ model order {
 }
 
 model OrderItem {
-  id              String  @id @default(uuid()) @db.Uuid
-  order_id        String  @db.Uuid
-  isMinor         Boolean @default(false)
-  user_id         String? @db.Uuid
-  minor_full_name String?
+  id                   String  @id @default(uuid()) @db.Uuid
+  order_id             String  @db.Uuid
+  isMinor              Boolean @default(false)
+  user_id              String? @db.Uuid
+  first_name           String?
+  last_name            String?
+  parent_order_item_id String? @db.Uuid
 
-  order order  @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  Users Users? @relation(fields: [user_id], references: [id])
+  order       order      @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  Users       Users?     @relation(fields: [user_id], references: [id])
+  parent_item OrderItem? @relation("MinorParent", fields: [parent_order_item_id], references: [id])
+  minor_items OrderItem[] @relation("MinorParent")
 }
 
 model Team {
