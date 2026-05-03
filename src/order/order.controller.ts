@@ -8,6 +8,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post('create')
   create(@Body() createOrderDto: CreateOrderDto) {
     return this.orderService.create(createOrderDto);
@@ -24,16 +25,17 @@ export class OrderController {
     return this.orderService.findByUser(req.user.userId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.orderService.findOne(id);
-  }
+//   @Get(':id')
+//   findOne(@Param('id') id: string) {
+//     return this.orderService.findOne(id);
+//   }
 
   // @Patch(':id')
   // update(@Param('id') id: string, @Body() updateOrderDto: UpdateOrderDto) {
   //   return this.orderService.update(id, updateOrderDto);
   // }
 
+  @UseGuards(JwtAuthGuard)
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.orderService.remove(id);

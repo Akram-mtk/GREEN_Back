@@ -25,7 +25,7 @@ export class CreateUserDto {
     @Matches(
     /^0(5|6|7)\d{8}$/,
     { message: 'Phone number must be a valid Algerian mobile number' },
-  )
+    )
     phone?: string;
 
 

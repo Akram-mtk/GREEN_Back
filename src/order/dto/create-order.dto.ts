@@ -6,7 +6,7 @@ import { Type } from 'class-transformer';
 
 export class CreateAttendeeDto {
   @IsBoolean()
-  isMinor: boolean;
+  isMinor!: boolean;
 
   /** RFID adults only */
   @IsOptional()
@@ -32,19 +32,19 @@ export class CreateAttendeeDto {
 export class CreateOrderDto {
   @IsNotEmpty()
   @IsUUID()
-  user_id: string;
+  user_id!: string;
 
   @IsNotEmpty()
   @IsUUID()
-  event_id: string;
+  event_id!: string;
 
   @IsNotEmpty()
   @IsUUID()
-  allocation_id: string;
+  allocation_id!: string;
 
   @IsArray()
   @ArrayMinSize(1)
   @ValidateNested({ each: true })
   @Type(() => CreateAttendeeDto)
-  attendees: CreateAttendeeDto[];
+  attendees!: CreateAttendeeDto[];
 }

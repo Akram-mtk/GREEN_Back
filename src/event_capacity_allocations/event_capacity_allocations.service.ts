@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { CreateEventCapacityAllocationDto } from './dto/create-event_capacity_allocation.dto';
 import { UpdateEventCapacityAllocationDto } from './dto/update-event_capacity_allocation.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -13,8 +13,10 @@ export class EventCapacityAllocationsService {
     });
   }
 
-  async findAll() {
-    return await this.prisma.eventCapacityAllocation.findMany();
+  async findAll(eventId: string) {
+    return await this.prisma.eventCapacityAllocation.findMany({
+      where: { event_id: eventId }
+    });
   }
 
   async findOne(id: string) {
@@ -31,8 +33,20 @@ export class EventCapacityAllocationsService {
   }
 
   async remove(id: string) {
-    return await this.prisma.eventCapacityAllocation.delete({
-      where: { id: id }
+    const allocation = await this.prisma.eventCapacityAllocation.findUnique({
+      where: { id }
     });
+    if (!allocation) throw new NotFoundException('EventCapacityAllocation not found');
+
+    try {
+      return await this.prisma.eventCapacityAllocation.delete({
+        where: { id }
+      });
+    } catch (error: any) {
+      if (error.code === 'P2014') {
+        throw new ConflictException('Cannot delete allocation with existing tickets or orders');
+      }
+      throw error;
+    }
   }
 }

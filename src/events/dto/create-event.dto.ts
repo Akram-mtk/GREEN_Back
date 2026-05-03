@@ -6,10 +6,6 @@ export class CreateEventDto {
     @IsNotEmpty()
     name!: string;
 
-    @IsBoolean()
-    @IsNotEmpty()
-    any_gate_entry!: boolean;
-
     @IsDateString()
     @IsNotEmpty()
     open_at!: Date;

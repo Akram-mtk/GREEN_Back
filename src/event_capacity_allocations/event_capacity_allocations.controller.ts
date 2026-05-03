@@ -12,9 +12,9 @@ export class EventCapacityAllocationsController {
     return this.eventCapacityAllocationsService.create(createEventCapacityAllocationDto);
   }
 
-  @Get('getAll')
-  findAll() {
-    return this.eventCapacityAllocationsService.findAll();
+  @Get('event/:eventId')
+  findAll(@Param('eventId') eventId: string) {
+    return this.eventCapacityAllocationsService.findAll(eventId);
   }
 
   @Get(':id')
@@ -22,10 +22,10 @@ export class EventCapacityAllocationsController {
     return this.eventCapacityAllocationsService.findOne(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateEventCapacityAllocationDto: UpdateEventCapacityAllocationDto) {
-    return this.eventCapacityAllocationsService.update(id, updateEventCapacityAllocationDto);
-  }
+//   @Patch(':id')
+//   update(@Param('id') id: string, @Body() updateEventCapacityAllocationDto: UpdateEventCapacityAllocationDto) {
+//     return this.eventCapacityAllocationsService.update(id, updateEventCapacityAllocationDto);
+//   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {

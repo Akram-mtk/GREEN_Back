@@ -5,7 +5,6 @@ import {
 import { randomUUID } from 'crypto';
 import { CardStatus } from '@prisma/client';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -21,19 +20,15 @@ export class OrderService {
     const rfidAdults = adults.filter(a => a.card_uid);
     const nameAdults = adults.filter(a => a.first_name || a.last_name);
 
-    if (rfidAdults.length > 0 && nameAdults.length > 0) {
-      throw new BadRequestException('Cannot mix RFID and name identification for adults in the same order');
-    }
     if (adults.length > 0) {
-      if (rfidAdults.length > 0 && rfidAdults.length !== adults.length) {
-        throw new BadRequestException('All adults must use RFID identification when any adult uses RFID');
+      if (rfidAdults.length > 0 && nameAdults.length > 0) {
+        throw new BadRequestException('Cannot mix RFID and name identification for adults in the same order');
       }
-      if (nameAdults.length > 0 && nameAdults.length !== adults.length) {
-        throw new BadRequestException('All adults must use name identification when any adult uses name');
-      }
-      if (rfidAdults.length === 0 && nameAdults.length === 0) {
+      if (rfidAdults.length + nameAdults.length !== adults.length) {
         throw new BadRequestException('Each adult attendee must provide either card_uid or first_name + last_name');
       }
+    } else {
+      throw new BadRequestException('At least one adult is required in an order');
     }
 
     // Validate name-identified adults have both names
@@ -68,11 +63,10 @@ export class OrderService {
 
           const card = await tx.rfid_cards.findFirst({
             where: { card_uid: attendee.card_uid, status: CardStatus.active },
-            include: { owner: { select: { first_name: true, last_name: true } } },
           });
           if (!card) throw new NotFoundException(`RFID card '${attendee.card_uid}' not found or not active`);
-          if (!card.owner_id || !card.owner) throw new ForbiddenException(`RFID card '${attendee.card_uid}' has no owner`);
-          return { user_id: card.owner_id, first_name: card.owner.first_name, last_name: card.owner.last_name };
+          if (!card.owner_id) throw new ForbiddenException(`RFID card '${attendee.card_uid}' has no owner`);
+          return { user_id: card.owner_id, first_name: null, last_name: null };
         }),
       );
       const resolvedUserIds = resolved.map(r => r.user_id);
@@ -81,8 +75,8 @@ export class OrderService {
       const rfidUserIds = resolvedUserIds.filter((id): id is string => id !== null);
       if (rfidUserIds.length) {
         const [conflictTicket, conflictItem] = await Promise.all([
-          tx.ticket.findFirst({ where: { user_id: { in: rfidUserIds }, event_id: dto.event_id } }),
-          tx.orderItem.findFirst({ where: { user_id: { in: rfidUserIds }, order: { event_id: dto.event_id } } }),
+          tx.ticket.findFirst({ where: { user_id: { in: rfidUserIds }, EventCapacityAllocation: { event_id: dto.event_id } } }),
+          tx.orderItem.findFirst({ where: { user_id: { in: rfidUserIds }, order: { EventCapacityAllocation: { event_id: dto.event_id } } } }),
         ]);
         if (conflictTicket || conflictItem) {
           throw new ConflictException('One or more attendees already have a ticket or pending order for this event');
@@ -91,13 +85,16 @@ export class OrderService {
 
       // --- Capacity ---
       const totalSeats = dto.attendees.length;
-      const updated = await tx.eventCapacityAllocation.updateMany({
-        where: { id: dto.allocation_id, available_seats: { gte: totalSeats } },
-        data: { available_seats: { decrement: totalSeats } },
+      const allocation = await tx.eventCapacityAllocation.findUnique({
+        where: { id: dto.allocation_id },
       });
-      if (updated.count === 0) {
+      if (!allocation || allocation.available_seats < totalSeats) {
         throw new ConflictException('SOLD_OUT: Not enough seats available');
       }
+      await tx.eventCapacityAllocation.update({
+        where: { id: dto.allocation_id },
+        data: { available_seats: { decrement: totalSeats } },
+      });
 
       // --- Pre-generate UUIDs for adults (needed so minors can reference parent_order_item_id) ---
       const attendeeIds: string[] = dto.attendees.map(() => randomUUID());
@@ -121,7 +118,6 @@ export class OrderService {
       return tx.order.create({
         data: {
           user_id: dto.user_id,
-          event_id: dto.event_id,
           allocation_id: dto.allocation_id,
           companions: { create: orderItemsData },
         },
@@ -133,14 +129,14 @@ export class OrderService {
   async findOne(id: string) {
     return this.prisma.order.findUnique({
       where: { id },
-      include: { companions: true },
+      include: { companions: { include: { Users: true } } },
     });
   }
 
   async findByUser(user_id: string) {
     return this.prisma.order.findMany({
       where: { user_id },
-      include: { companions: true },
+      include: { companions: { include: { Users: true } } },
     });
   }
 

@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// FIXME: national_id infos, also complet updating
+// FIXME: national_id infos
 model Users {
   id         String   @id @default(uuid()) @db.Uuid
   first_name String
@@ -63,7 +63,6 @@ model Rfid_cards {
 model Event {
   id             String    @id @default(uuid()) @db.Uuid
   name           String
-  any_gate_entry Boolean
   open_at        DateTime
   close_at       DateTime
   start_at       DateTime
@@ -77,16 +76,16 @@ model Event {
 
   EntryLog                EntryLog[]
   EventCapacityAllocation EventCapacityAllocation[]
-  Ticket                  Ticket[]
-  orders                  order[]
 }
 
-// NOTE: available_seats >= 0 enforced via raw SQL CHECK constraint (see migrations)
+// NOTE: available_seats >= 0 enforced via raw SQL CHECK constraint
 model EventCapacityAllocation {
   id              String @id @default(uuid()) @db.Uuid
   event_id        String @db.Uuid
   area_id         String @db.Uuid
   available_seats Int
+  home_team_area  Boolean
+  price           Decimal  @db.Decimal(10, 2)
 
   Area  Area  @relation(fields: [area_id], references: [id])
   Event Event @relation(fields: [event_id], references: [id])
@@ -97,12 +96,12 @@ model EventCapacityAllocation {
   @@unique([event_id, area_id])
 }
 
+// Warning: allocation_id already has event_id (event_id is redundent)
 model Ticket {
   id               String  @id @default(uuid()) @db.Uuid
   allocation_id    String  @db.Uuid
   user_id          String? @db.Uuid
   used             Boolean @default(false)
-  event_id         String  @db.Uuid
   isMinor          Boolean @default(false)
   parent_ticket_id String? @db.Uuid
   first_name       String?
@@ -113,23 +112,20 @@ model Ticket {
   minor_tickets Ticket[] @relation("TicketMinors")
 
   EventCapacityAllocation EventCapacityAllocation @relation(fields: [allocation_id], references: [id])
-  Event                   Event                   @relation(fields: [event_id], references: [id])
   Users                   Users?                  @relation(fields: [user_id], references: [id])
 }
 
+// NOTE: change companion name to attendance
 model order {
   id            String   @id @default(uuid()) @db.Uuid
   user_id       String   @db.Uuid
-  event_id      String   @db.Uuid
   allocation_id String   @db.Uuid
   created_at    DateTime @default(now()) @db.Timestamptz(0)
 
   Users                   Users                   @relation(fields: [user_id], references: [id])
-  Event                   Event                   @relation(fields: [event_id], references: [id])
   EventCapacityAllocation EventCapacityAllocation @relation(fields: [allocation_id], references: [id])
   companions              OrderItem[]
 
-  @@unique([user_id, event_id])
 }
 
 model OrderItem {
@@ -161,7 +157,7 @@ model Team {
 model SubscriptionPlan {
   id                 String   @id @default(uuid()) @db.Uuid
   name               String
-  description        String?
+  description        String
   price              Decimal  @db.Decimal(10, 2)
   number_of_entrance Int?
   area_id            String   @db.Uuid
@@ -174,6 +170,7 @@ model SubscriptionPlan {
 }
 
 // FIXME : can a user have two subs at the same time ?
+// NOTE: entrance_left >= 0
 model UserSubscription {
   id                   String @id @default(uuid()) @db.Uuid
   owner_id             String @db.Uuid

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -44,6 +44,9 @@ export class EventsService {
   }
 
   async remove(id: string) {
+    const event = await this.prisma.event.findUnique({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    if (event.published) throw new BadRequestException('Cannot delete a published event');
     return await this.prisma.event.update({
       where: { id },
       data: { deletedAt: new Date() },
