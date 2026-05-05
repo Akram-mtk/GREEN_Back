@@ -18,7 +18,7 @@ export class RfidCardsController {
   @UseGuards(JwtAuthGuard)
   @Patch('assign')
   async assign(@Body() assignCardToUserDto: AssignCardToUserDto, @Request() req: any) {
-    return new RfidCardEntity(await this.rfidCardsService.assign(assignCardToUserDto, req.user.userId));
+    return this.rfidCardsService.assign(assignCardToUserDto, req.user.userId);
   }
 
   @Patch('block/:id')

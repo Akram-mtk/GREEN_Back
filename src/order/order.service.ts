@@ -3,7 +3,7 @@ import {
   BadRequestException, ForbiddenException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { CardStatus } from '@prisma/client';
+import { CardStatus, TicketType } from '@prisma/client';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { PrismaService } from '../prisma/prisma.service';
 
@@ -11,7 +11,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class OrderService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateOrderDto) {
+  async create(dto: CreateOrderDto, userId: string) {
     // --- Pre-transaction validation ---
     const adults = dto.attendees.filter(a => !a.isMinor);
     const minors = dto.attendees.filter(a => a.isMinor);
@@ -20,15 +20,32 @@ export class OrderService {
     const rfidAdults = adults.filter(a => a.card_uid);
     const nameAdults = adults.filter(a => a.first_name || a.last_name);
 
-    if (adults.length > 0) {
-      if (rfidAdults.length > 0 && nameAdults.length > 0) {
-        throw new BadRequestException('Cannot mix RFID and name identification for adults in the same order');
-      }
-      if (rfidAdults.length + nameAdults.length !== adults.length) {
-        throw new BadRequestException('Each adult attendee must provide either card_uid or first_name + last_name');
+    if (adults.length === 0) {
+      throw new BadRequestException('At least one adult is required in an order');
+    }
+
+    // Determine required ticket type from the event's allocation area
+    const preAllocation = await this.prisma.eventCapacityAllocation.findUnique({
+      where: { id: dto.allocation_id },
+      include: { Event: { select: { home_ticket_type: true, away_ticket_type: true } } },
+    });
+    if (!preAllocation) throw new NotFoundException('Allocation not found');
+
+    const requiredType = preAllocation.home_team_area
+      ? preAllocation.Event.home_ticket_type
+      : preAllocation.Event.away_ticket_type;
+
+    if (requiredType === TicketType.rfid) {
+      if (rfidAdults.length !== adults.length) {
+        throw new BadRequestException('This area requires RFID card (card_uid) for all adult attendees');
       }
     } else {
-      throw new BadRequestException('At least one adult is required in an order');
+      if (rfidAdults.length > 0) {
+        throw new BadRequestException('This area requires name-based identification; RFID cards are not accepted');
+      }
+      if (nameAdults.length !== adults.length) {
+        throw new BadRequestException('Each adult attendee must provide first_name and last_name for this area');
+      }
     }
 
     // Validate name-identified adults have both names
@@ -75,8 +92,8 @@ export class OrderService {
       const rfidUserIds = resolvedUserIds.filter((id): id is string => id !== null);
       if (rfidUserIds.length) {
         const [conflictTicket, conflictItem] = await Promise.all([
-          tx.ticket.findFirst({ where: { user_id: { in: rfidUserIds }, EventCapacityAllocation: { event_id: dto.event_id } } }),
-          tx.orderItem.findFirst({ where: { user_id: { in: rfidUserIds }, order: { EventCapacityAllocation: { event_id: dto.event_id } } } }),
+          tx.ticket.findFirst({ where: { user_id: { in: rfidUserIds }, EventCapacityAllocation: { event_id: preAllocation.event_id } } }),
+          tx.orderItem.findFirst({ where: { user_id: { in: rfidUserIds }, order: { EventCapacityAllocation: { event_id: preAllocation.event_id } } } }),
         ]);
         if (conflictTicket || conflictItem) {
           throw new ConflictException('One or more attendees already have a ticket or pending order for this event');
@@ -117,7 +134,7 @@ export class OrderService {
 
       return tx.order.create({
         data: {
-          user_id: dto.user_id,
+          user_id: userId,
           allocation_id: dto.allocation_id,
           companions: { create: orderItemsData },
         },

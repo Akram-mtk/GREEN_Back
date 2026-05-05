@@ -32,14 +32,6 @@ export class CreateAttendeeDto {
 export class CreateOrderDto {
   @IsNotEmpty()
   @IsUUID()
-  user_id!: string;
-
-  @IsNotEmpty()
-  @IsUUID()
-  event_id!: string;
-
-  @IsNotEmpty()
-  @IsUUID()
   allocation_id!: string;
 
   @IsArray()

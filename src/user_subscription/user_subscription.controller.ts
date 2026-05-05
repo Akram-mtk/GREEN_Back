@@ -9,9 +9,10 @@ export class UserSubscriptionController {
 
   constructor(private readonly userSubscriptionService: UserSubscriptionService) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body() createUserSubscriptionDto: CreateUserSubscriptionDto) {
-    return this.userSubscriptionService.create(createUserSubscriptionDto);
+  create(@Body() createUserSubscriptionDto: CreateUserSubscriptionDto, @Request() req: any) {
+    return this.userSubscriptionService.create(req.user.userId, createUserSubscriptionDto);
   }
 
   @UseGuards(JwtAuthGuard)

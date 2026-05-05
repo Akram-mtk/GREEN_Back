@@ -1,4 +1,5 @@
-import { IsString, IsNotEmpty, IsOptional, IsDateString,IsBoolean, IsUUID } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsDateString, IsBoolean, IsUUID, IsEnum } from 'class-validator';
+import { TicketType } from '@prisma/client';
 
 export class CreateEventDto {
 
@@ -26,5 +27,12 @@ export class CreateEventDto {
     @IsNotEmpty()
     away_team_id!: string;
 
+    @IsEnum(TicketType)
+    @IsNotEmpty()
+    home_ticket_type!: TicketType;
+
+    @IsEnum(TicketType)
+    @IsNotEmpty()
+    away_ticket_type!: TicketType;
 
 }

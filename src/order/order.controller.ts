@@ -10,8 +10,8 @@ export class OrderController {
 
   @UseGuards(JwtAuthGuard)
   @Post('create')
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.orderService.create(createOrderDto);
+  create(@Body() createOrderDto: CreateOrderDto, @Request() req: any) {
+    return this.orderService.create(createOrderDto, req.user.userId);
   }
 
   // @Get()

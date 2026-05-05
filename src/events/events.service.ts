@@ -1,4 +1,5 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { EventEntity } from './entities/event.entity';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -17,6 +18,7 @@ export class EventsService {
     return await this.prisma.event.findMany({
       where: { published: true, deletedAt: null },
       include: { home_team: true, away_team: true },
+      omit: { published: true },
     });
   }
 
@@ -24,10 +26,16 @@ export class EventsService {
     return await this.prisma.event.findFirst({
       where: { id, published: true, deletedAt: null },
       include: { home_team: true, away_team: true },
+      omit: { published: true },
     });
   }
 
   async publish(id: string) {
+    const event = await this.prisma.event.findUnique({ where: { id } });
+    if (!event) throw new NotFoundException('Event not found');
+    const allocationCount = await this.prisma.eventCapacityAllocation.count({ where: { event_id: id } });
+    if (allocationCount === 0) throw new BadRequestException('Event must have at least one capacity allocation before publishing');
+
     return await this.prisma.event.update({
       where: { id },
       data: { published: true },

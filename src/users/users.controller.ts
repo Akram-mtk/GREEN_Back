@@ -3,7 +3,6 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
-import { UserEntity } from './entities/user.entity';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 
@@ -18,7 +17,7 @@ export class UsersController {
     @Body() updateUserDto: UpdateUserDto,
     @Request() req: any
   ) {
-    return new UserEntity(await this.userService.update(req.user.userId, updateUserDto));
+    return this.userService.update(req.user.userId, updateUserDto);
   }
 
   @Patch('change-password')

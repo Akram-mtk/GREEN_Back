@@ -8,9 +8,16 @@ export class EventCapacityAllocationsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createEventCapacityAllocationDto: CreateEventCapacityAllocationDto) {
-    return await this.prisma.eventCapacityAllocation.create({
-      data: createEventCapacityAllocationDto
-    });
+    try {
+      return await this.prisma.eventCapacityAllocation.create({
+        data: createEventCapacityAllocationDto
+      });
+    } catch (err: any) {
+      if (err.code === 'P2002') {
+        throw new ConflictException('An allocation for this area already exists for this event');
+      }
+      throw err;
+    }
   }
 
   async findAll(eventId: string) {

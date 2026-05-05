@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -34,9 +34,12 @@ export class UsersService {
   }
   
   async update(id: string, updateUserDto: UpdateUserDto){
+    const user = await this.prisma.users.findUnique({ where: { id } });
+    if (!user || !user.is_active) throw new ForbiddenException('Account is disabled');
     return this.prisma.users.update({
       where: { id },
-      data: updateUserDto
+      data: updateUserDto,
+      omit: { password: true },
     })
   }
 
@@ -48,6 +51,7 @@ export class UsersService {
 
     const user = await this.prisma.users.findUnique({ where: { id } });
     if (!user) throw new UnauthorizedException('User not found');
+    if (!user.is_active) throw new ForbiddenException('Account is disabled');
 
     const isMatch = await bcrypt.compare(dto.currentPassword, user.password);
     if (!isMatch) throw new UnauthorizedException('Incorrect current password');

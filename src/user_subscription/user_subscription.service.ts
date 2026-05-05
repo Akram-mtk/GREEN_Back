@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserSubscriptionDto } from './dto/create-user_subscription.dto';
 import { UpdateUserSubscriptionDto } from './dto/update-user_subscription.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -8,17 +8,16 @@ export class UserSubscriptionService {
 
   constructor(private prisma: PrismaService){}
   
-  async create(createUserSubscriptionDto: CreateUserSubscriptionDto) {
-    
-    const { owner_id, subscription_plan_id } = createUserSubscriptionDto;
+  async create(owner_id: string, createUserSubscriptionDto: CreateUserSubscriptionDto) {
+
+    const { subscription_plan_id } = createUserSubscriptionDto;
 
     const plan = await this.prisma.subscriptionPlan.findUnique({
       where: { id: subscription_plan_id }
     });
 
-    if (!plan) {
-      throw new NotFoundException("Subscription plan not found");
-    }
+    if (!plan) throw new NotFoundException("Subscription plan not found");
+    if (!plan.is_active) throw new BadRequestException("Subscription plan is no longer active");
 
     return this.prisma.userSubscription.create({
       data: {

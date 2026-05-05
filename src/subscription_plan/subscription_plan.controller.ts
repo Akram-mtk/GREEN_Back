@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { SubscriptionPlanService } from './subscription_plan.service';
 import { CreateSubscriptionPlanDto } from './dto/create-subscription_plan.dto';
 import { UpdateSubscriptionPlanDto } from './dto/update-subscription_plan.dto';
+import { SubscriptionPlanEntity } from './entities/subscription_plan.entity';
 
 @Controller('subscription-plan')
 export class SubscriptionPlanController {
@@ -13,13 +14,14 @@ export class SubscriptionPlanController {
   }
 
   @Get()
-  findAll() {
-    return this.subscriptionPlanService.findAll();
+  async findAll() {
+    const plans = await this.subscriptionPlanService.findAll();
+    return plans.map(p => new SubscriptionPlanEntity(p));
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.subscriptionPlanService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    return new SubscriptionPlanEntity(await this.subscriptionPlanService.findOne(id));
   }
 
   @Patch(':id/deactivate')

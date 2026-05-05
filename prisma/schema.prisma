@@ -61,15 +61,17 @@ model Rfid_cards {
 }
 
 model Event {
-  id             String    @id @default(uuid()) @db.Uuid
-  name           String
-  open_at        DateTime
-  close_at       DateTime
-  start_at       DateTime
-  home_team_id   String    @db.Uuid
-  away_team_id   String    @db.Uuid
-  published      Boolean   @default(false)
-  deletedAt      DateTime?
+  id                  String      @id @default(uuid()) @db.Uuid
+  name                String
+  open_at             DateTime
+  close_at            DateTime
+  start_at            DateTime
+  home_team_id        String      @db.Uuid
+  away_team_id        String      @db.Uuid
+  published           Boolean     @default(false)
+  home_ticket_type    TicketType
+  away_ticket_type    TicketType
+  deletedAt           DateTime?
 
   home_team Team @relation("HomeTeam", fields: [home_team_id], references: [id])
   away_team Team @relation("AwayTeam", fields: [away_team_id], references: [id])
@@ -194,4 +196,9 @@ enum CardStatus {
   issued
   active
   blocked
+}
+
+enum TicketType {
+  rfid
+  qrcode
 }

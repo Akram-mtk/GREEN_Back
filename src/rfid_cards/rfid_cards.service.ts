@@ -31,16 +31,25 @@ export class RfidCardsService {
   }
 
   async assign(assignCardToUserDto: AssignCardToUserDto, userId: string) {
+    const user = await this.prisma.users.findUnique({ where: { id: userId } });
+    if (!user || !user.is_active) throw new ForbiddenException('Account is disabled');
+
+    const existingCard = await this.prisma.rfid_cards.findFirst({ where: { owner_id: userId } });
+    if (existingCard) throw new ConflictException('User already has an RFID card');
+
     const card = await this.prisma.rfid_cards.findFirst({
       where: { claim_code: sha256(assignCardToUserDto.claim_code), owner_id: null },
     });
 
     if (!card) throw new NotFoundException('Invalid or already used claim code');
 
-    return this.prisma.rfid_cards.update({
+    const updated = await this.prisma.rfid_cards.update({
       where: { id: card.id },
       data: { owner_id: userId, status: CardStatus.active, claim_code: null },
     });
+
+    const { card_secret, claim_code, ...safeCard } = updated;
+    return safeCard;
   }
 
   async blockCard(identifier: string) {
