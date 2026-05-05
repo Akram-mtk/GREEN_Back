@@ -63,7 +63,7 @@ export class TicketsService {
     return await this.prisma.ticket.findMany();
   }
 
-  async findMany(id: string) {
+  async findOne(id: string) {
     return await this.prisma.ticket.findUnique({
       where: { id },
     });
@@ -72,22 +72,18 @@ export class TicketsService {
   async update(id: string, updateTicketDto: UpdateTicketDto) {}
 
   async remove(id: string) {
-    const ticket = await this.prisma.ticket.findMany({ where: { id } });
+    const ticket = await this.prisma.ticket.findUnique({ where: { id } });
 
     if (!ticket) {
-      throw new Error('Ticket not found');
+      throw new NotFoundException('Ticket not found');
     }
 
-    if (ticket.length > 1) {
-      await this.prisma.$transaction(async (tx) => {
-        for (const t of ticket) {
-          await tx.ticket.deleteMany({ where: { user_id: t.user_id } });
-        }
-        await tx.eventCapacityAllocation.updateMany({
-          where: { id: ticket[0].allocation_id },
-          data: { available_seats: { increment: ticket.length } },
-        });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.ticket.delete({ where: { id } });
+      await tx.eventCapacityAllocation.update({
+        where: { id: ticket.allocation_id },
+        data: { available_seats: { increment: 1 } },
       });
-    }
+    });
   }
 }
