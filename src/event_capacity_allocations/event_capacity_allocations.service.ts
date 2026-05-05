@@ -22,7 +22,8 @@ export class EventCapacityAllocationsService {
 
   async findAll(eventId: string) {
     return await this.prisma.eventCapacityAllocation.findMany({
-      where: { event_id: eventId }
+      where: { event_id: eventId },
+      include: { Event: true, Area: true }
     });
   }
 

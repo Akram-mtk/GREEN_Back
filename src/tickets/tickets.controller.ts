@@ -1,6 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe, UseGuards, Req } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { Request } from 'express';
 
 @Controller('tickets')
 export class TicketsController {
@@ -11,9 +13,10 @@ export class TicketsController {
     return this.ticketsService.create(order_id);
   }
 
-  @Get()
-  findAll() {
-    return this.ticketsService.findAll();
+  @UseGuards(JwtAuthGuard)
+  @Get('mine')
+  findMine(@Req() req: any) {
+    return this.ticketsService.findMine(req.user.userId);
   }
 
   // @Get(':id')
