@@ -91,7 +91,7 @@ export class RfidCardsService {
 
     // Ticket-based entry (adult tickets only — minors are linked via parent_ticket_id)
     const ticket = await this.prisma.ticket.findFirst({
-      where: { event_id: scanRfidDto.event_id, user_id: ownerId, parent_ticket_id: null },
+      where: { EventCapacityAllocation: { event_id: scanRfidDto.event_id }, user_id: ownerId, parent_ticket_id: null },
     });
 
     if (ticket && !ticket.used) {
@@ -107,37 +107,35 @@ export class RfidCardsService {
       return { access: 'granted', method: 'ticket' };
     }
 
-    // Subscription-based entry (only when event allows any-gate entry)
-    if (event.any_gate_entry) {
-      const eventAreas = await this.prisma.eventCapacityAllocation.findMany({
-        where: { event_id: scanRfidDto.event_id },
-        select: { area_id: true },
-      });
-      const areaIds = eventAreas.map((a) => a.area_id);
+    // Subscription-based entry
+    const eventAreas = await this.prisma.eventCapacityAllocation.findMany({
+      where: { event_id: scanRfidDto.event_id },
+      select: { area_id: true },
+    });
+    const areaIds = eventAreas.map((a) => a.area_id);
 
-      const subscription = await this.prisma.userSubscription.findFirst({
-        where: {
-          owner_id: ownerId,
-          subscription: {
-            area_id: { in: areaIds },
-            expires_at: { gt: now },
-          },
-          OR: [{ entrance_left: null }, { entrance_left: { gt: 0 } }],
+    const subscription = await this.prisma.userSubscription.findFirst({
+      where: {
+        owner_id: ownerId,
+        subscription: {
+          area_id: { in: areaIds },
+          expires_at: { gt: now },
         },
-      });
+        OR: [{ entrance_left: null }, { entrance_left: { gt: 0 } }],
+      },
+    });
 
-      if (subscription) {
-        await this.prisma.$transaction(async (tx) => {
-          if (subscription.entrance_left !== null) {
-            await tx.userSubscription.update({
-              where: { id: subscription.id },
-              data: { entrance_left: { decrement: 1 } },
-            });
-          }
-          await tx.entryLog.create({ data: { user_id: ownerId, event_id: scanRfidDto.event_id } });
-        });
-        return { access: 'granted', method: 'subscription' };
-      }
+    if (subscription) {
+      await this.prisma.$transaction(async (tx) => {
+        if (subscription.entrance_left !== null) {
+          await tx.userSubscription.update({
+            where: { id: subscription.id },
+            data: { entrance_left: { decrement: 1 } },
+          });
+        }
+        await tx.entryLog.create({ data: { user_id: ownerId, event_id: scanRfidDto.event_id } });
+      });
+      return { access: 'granted', method: 'subscription' };
     }
 
     throw new ForbiddenException('No valid ticket or subscription for this event');
