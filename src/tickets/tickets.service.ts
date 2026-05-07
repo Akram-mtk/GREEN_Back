@@ -119,7 +119,7 @@ export class TicketsService {
     });
 
     if (recipientEmail && qrTickets.length > 0) {
-      await this.mailService.sendTicketQrCodes(recipientEmail, qrTickets);
+      this.mailService.sendTicketQrCodes(recipientEmail, qrTickets);
     }
   }
 
@@ -128,16 +128,39 @@ export class TicketsService {
   }
 
   async findMine(userId: string) {
-    return await this.prisma.ticket.findMany({
+    const tickets = await this.prisma.ticket.findMany({
       where: { user_id: userId },
       include: {
+        Users: { include: { Rfid_cards: true } },
+        parent_ticket: { select: { first_name: true, last_name: true } },
         EventCapacityAllocation: {
           include: {
-            Event: true,
+            Area: { select: { name: true } },
+            Event: {
+              include: { home_team: true, away_team: true },
+            },
           },
         },
       },
     });
+
+    return tickets.map((t) => ({
+      id: t.id,
+      rfid_card_id: t.Users?.Rfid_cards[0]?.id ?? null,
+      qr_code: t.qr_code,
+      first_name: t.first_name,
+      last_name: t.last_name,
+      is_minor: t.isMinor,
+      parent_first_name: t.parent_ticket?.first_name ?? null,
+      parent_last_name: t.parent_ticket?.last_name ?? null,
+      allocation: {
+        Area: { name: t.EventCapacityAllocation.Area.name },
+      },
+      event: {
+        name: `${t.EventCapacityAllocation.Event.home_team.name} vs ${t.EventCapacityAllocation.Event.away_team.name}`,
+        start_at: t.EventCapacityAllocation.Event.start_at,
+      },
+    }));
   }
 
   async findOne(id: string) {
