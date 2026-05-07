@@ -13,12 +13,27 @@ export class TicketsService {
 
   async create(order_id: string) {
     let recipientEmail: string | null = null;
-    const qrTickets: { id: string; qr_code: string; first_name?: string | null }[] = [];
+    let eventDetails: any = null;
+    const qrTickets: { id: string; qr_code: string; first_name?: string | null; match_name?: string; match_date?: string; match_time?: string; area_name?: string; team_name?: string }[] = [];
 
     await this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findUnique({
         where: { id: order_id },
-        include: { companions: true, Users: true },
+        include: {
+          companions: true,
+          Users: true,
+          EventCapacityAllocation: {
+            include: {
+              Event: {
+                include: {
+                  home_team: true,
+                  away_team: true,
+                },
+              },
+              Area: true,
+            },
+          },
+        },
       });
       if (!order) throw new NotFoundException('Order not found');
 
@@ -29,6 +44,14 @@ export class TicketsService {
       if (!isRfidOrder) {
         recipientEmail = order.Users.email;
       }
+
+      // Extract event details for email
+      eventDetails = order.EventCapacityAllocation;
+      const matchDate = new Date(eventDetails.Event.start_at);
+      const formattedDate = matchDate.toLocaleDateString('fr-FR');
+      const formattedTime = matchDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const matchName = `${eventDetails.Event.home_team.name} vs ${eventDetails.Event.away_team.name}`;
+      const teamName = eventDetails.home_team_area ? eventDetails.Event.home_team.name : eventDetails.Event.away_team.name;
 
       // Phase 1: adult tickets — map orderItemId → ticketId
       const ticketIdMap = new Map<string, string>();
@@ -45,7 +68,18 @@ export class TicketsService {
             qr_code,
           },
         });
-        if (qr_code) qrTickets.push({ id: ticket.id, qr_code, first_name: item.first_name });
+        if (qr_code) {
+          qrTickets.push({
+            id: ticket.id,
+            qr_code,
+            first_name: item.first_name,
+            match_name: matchName,
+            match_date: formattedDate,
+            match_time: formattedTime,
+            area_name: eventDetails.Area.name,
+            team_name: teamName,
+          });
+        }
         ticketIdMap.set(item.id, ticket.id);
       }
 
@@ -67,7 +101,18 @@ export class TicketsService {
             qr_code,
           },
         });
-        if (qr_code) qrTickets.push({ id: '', qr_code, first_name: item.first_name });
+        if (qr_code) {
+          qrTickets.push({
+            id: '',
+            qr_code,
+            first_name: item.first_name,
+            match_name: matchName,
+            match_date: formattedDate,
+            match_time: formattedTime,
+            area_name: eventDetails.Area.name,
+            team_name: teamName,
+          });
+        }
       }
 
       await tx.order.delete({ where: { id: order_id } });

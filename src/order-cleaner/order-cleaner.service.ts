@@ -7,7 +7,7 @@ export class OrderCleanerService {
 
     constructor(private prisma: PrismaService) {}
 
-    @Cron(CronExpression.EVERY_MINUTE)
+    @Cron(CronExpression.EVERY_10_HOURS)
     async handleExpiredOrders() {
         const expiredOrders = await this.prisma.order.findMany({
             where: { created_at: { lt: new Date(Date.now() - 10 * 60 * 1000) } },

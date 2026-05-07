@@ -16,7 +16,7 @@ export class RfidCardsService {
 
   async create(createRfidCardDto: CreateRfidCardDto) {
     const plaintextClaimCode  = randomBytes(5).toString('hex');   // 10 hex chars
-    const plaintextCardSecret = randomBytes(32).toString('hex');  // 64 hex chars
+    const plaintextCardSecret = randomBytes(16).toString('hex');  // 32 hex chars
 
     const card = await this.prisma.rfid_cards.create({
       data: {
