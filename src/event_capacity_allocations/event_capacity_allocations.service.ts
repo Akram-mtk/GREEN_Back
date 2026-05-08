@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { CreateEventCapacityAllocationDto } from './dto/create-event_capacity_allocation.dto';
 import { UpdateEventCapacityAllocationDto } from './dto/update-event_capacity_allocation.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -7,16 +7,37 @@ import { PrismaService } from '../prisma/prisma.service';
 export class EventCapacityAllocationsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createEventCapacityAllocationDto: CreateEventCapacityAllocationDto) {
+  async create(allocations: CreateEventCapacityAllocationDto[]) {
+    if (allocations.length < 2) {
+      throw new BadRequestException('At least two allocations are required');
+    }
+
+    const hasHome = allocations.some(a => a.home_team_area === true);
+    const hasAway = allocations.some(a => a.home_team_area === false);
+    if (!hasHome || !hasAway) {
+      throw new BadRequestException('Allocations must include at least one home area and one away area');
+    }
+
     try {
-      return await this.prisma.eventCapacityAllocation.create({
-        data: createEventCapacityAllocationDto
-      });
+      return await this.prisma.$transaction(
+        allocations.map(a => this.prisma.eventCapacityAllocation.create({ data: a }))
+      );
     } catch (err: any) {
       if (err.code === 'P2002') {
         throw new ConflictException('An allocation for this area already exists for this event');
       }
       throw err;
+    }
+  }
+
+  async add(createEventCapacityAllocationDto : CreateEventCapacityAllocationDto) {
+    try {
+      return await this.prisma.eventCapacityAllocation.create({ data: createEventCapacityAllocationDto });
+    } 
+      catch (err: any) {
+        if (err.code === 'P2002') {
+          throw new ConflictException('An allocation for this area already exists for this event');
+      }
     }
   }
 
