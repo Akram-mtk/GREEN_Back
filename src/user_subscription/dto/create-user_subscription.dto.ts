@@ -5,4 +5,9 @@ export class CreateUserSubscriptionDto {
     @IsUUID()
     @IsNotEmpty()
     subscription_plan_id!: string;
+
+    @IsUUID()
+    @IsNotEmpty()
+    area_id!: string;
+
 }

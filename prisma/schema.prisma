@@ -43,7 +43,8 @@ model Area {
   deletedAt DateTime?
 
   EventCapacityAllocation EventCapacityAllocation[]
-  subscriptionPlans       SubscriptionPlan[]
+
+  userSubscriptions UserSubscription[]
 }
 
 
@@ -162,11 +163,10 @@ model SubscriptionPlan {
   description        String
   price              Decimal  @db.Decimal(10, 2)
   number_of_entrance Int?
-  area_id            String   @db.Uuid
   is_active          Boolean  @default(true)
   expires_at         DateTime @db.Timestamptz(0)
+  validation_time_by_month    Int
 
-  area Area @relation(fields: [area_id], references: [id])
 
   userSubscriptions UserSubscription[]
 }
@@ -178,9 +178,14 @@ model UserSubscription {
   owner_id             String @db.Uuid
   subscription_plan_id String @db.Uuid
   entrance_left        Int?
+  area_id              String @db.Uuid
+  created_at           DateTime @default(now()) @db.Timestamptz(0)
+  expires_at           DateTime @db.Timestamptz(0)
+
 
   owner        Users            @relation(fields: [owner_id], references: [id])
   subscription SubscriptionPlan @relation(fields: [subscription_plan_id], references: [id])
+  area         Area             @relation(fields: [area_id], references: [id])
 }
 
 model Advertisement {

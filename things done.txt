@@ -1,0 +1,2 @@
+on user subscription areid added and removed from subscription plan 
+expiring date added to usersub and adding validation time in subscription plan 

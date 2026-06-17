@@ -18,12 +18,14 @@ export class CreateSubscriptionPlanDto {
     @IsOptional()
     number_of_entrance?: number | null;
 
-    @IsUUID()
-    @IsNotEmpty()
-    area_id!: string;
-
     @IsDateString()
     @IsNotEmpty()
     expires_at!: string;
+
+    @IsNumber()
+    @IsNotEmpty()
+    validation_time_by_month!: number;
+
+    
 
 }
