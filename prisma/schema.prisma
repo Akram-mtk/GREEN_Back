@@ -165,7 +165,7 @@ model SubscriptionPlan {
   number_of_entrance Int?
   is_active          Boolean  @default(true)
   expires_at         DateTime @db.Timestamptz(0)
-  validation_time_by_month    Int
+  validation_time_by_month    Int @default(0)
 
 
   userSubscriptions UserSubscription[]
@@ -178,14 +178,14 @@ model UserSubscription {
   owner_id             String @db.Uuid
   subscription_plan_id String @db.Uuid
   entrance_left        Int?
-  area_id              String @db.Uuid
-  created_at           DateTime @default(now()) @db.Timestamptz(0)
-  expires_at           DateTime @db.Timestamptz(0)
+  area_id              String?   @db.Uuid
+  created_at           DateTime  @default(now()) @db.Timestamptz(0)
+  expires_at           DateTime? @db.Timestamptz(0)
 
 
   owner        Users            @relation(fields: [owner_id], references: [id])
   subscription SubscriptionPlan @relation(fields: [subscription_plan_id], references: [id])
-  area         Area             @relation(fields: [area_id], references: [id])
+  area         Area?            @relation(fields: [area_id], references: [id])
 }
 
 model Advertisement {

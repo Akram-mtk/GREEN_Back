@@ -55,7 +55,7 @@ export class UserSubscriptionService {
 
     return subscriptions.map(sub => ({
       ...sub,
-      status: sub.expires_at < new Date() ? 'expired' : 'active',
+      status: sub.expires_at && sub.expires_at < new Date() ? 'expired' : 'active',
     }));
   }
 

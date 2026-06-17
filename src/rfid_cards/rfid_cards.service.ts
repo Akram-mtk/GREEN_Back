@@ -127,7 +127,6 @@ export class RfidCardsService {
       where: {
         owner_id: ownerId,
         subscription: {
-          area_id: { in: areaIds },
           expires_at: { gt: now },
         },
         OR: [{ entrance_left: null }, { entrance_left: { gt: 0 } }],
