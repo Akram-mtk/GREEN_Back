@@ -197,6 +197,19 @@ model Advertisement {
   order       Int
 }
 
+model ClubSettings {
+  id              String   @id @default(uuid()) @db.Uuid
+  club_name       String   @default("Mouloudia Club d'Alger")
+  club_short_name String   @default("MCA")
+  stadium_name    String   @default("Stade de Ali AMMAR Dit Ali La Pointe")
+  email           String   @default("mouloudia@gmail.com")
+  phone           String   @default("0000000000")
+  facebook        String   @default("")
+  instagram       String   @default("")
+  created_at      DateTime @default(now()) @db.Timestamptz(0)
+  updated_at      DateTime @updatedAt @db.Timestamptz(0)
+}
+
 enum CardStatus {
   issued
   active
