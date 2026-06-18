@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -40,6 +40,21 @@ export class TicketsService {
       const adultItems = order.companions.filter(c => !c.isMinor);
       const minorItems = order.companions.filter(c => c.isMinor);
       const isRfidOrder = adultItems.some(a => a.user_id !== null);
+
+      const userIds = order.companions
+        .map(c => c.user_id)
+        .filter((id): id is string => id !== null);
+      if (userIds.length) {
+        const existingTicket = await tx.ticket.findFirst({
+          where: {
+            user_id: { in: userIds },
+            EventCapacityAllocation: { event_id: order.EventCapacityAllocation.event_id },
+          },
+        });
+        if (existingTicket) {
+          throw new ConflictException('One or more attendees already have a ticket for this event');
+        }
+      }
 
       if (!isRfidOrder) {
         recipientEmail = order.Users.email;

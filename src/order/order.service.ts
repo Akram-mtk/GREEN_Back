@@ -41,7 +41,7 @@ export class OrderService {
       }
     } else {
       if (rfidAdults.length > 0) {
-        throw new BadRequestException('This area requires name-based identification; RFID cards are not accepted');
+        throw new BadRequestException('This area requires name-based identification; RFID cards are not accepted');// we can get the name of the holder
       }
       if (nameAdults.length !== adults.length) {
         throw new BadRequestException('Each adult attendee must provide first_name and last_name for this area');
