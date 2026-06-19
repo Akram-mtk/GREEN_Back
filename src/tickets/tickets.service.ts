@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { randomUUID } from 'crypto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { PrismaService } from '../prisma/prisma.service';
-import { MailService } from '../mail/mail.service';
+import { MailService, TicketEmailData } from '../mail/mail.service';
 
 @Injectable()
 export class TicketsService {
@@ -14,7 +14,7 @@ export class TicketsService {
   async create(order_id: string) {
     let recipientEmail: string | null = null;
     let eventDetails: any = null;
-    const qrTickets: { id: string; qr_code: string; first_name?: string | null; match_name?: string; match_date?: string; match_time?: string; area_name?: string; team_name?: string }[] = [];
+    const qrTickets: TicketEmailData[] = [];
 
     await this.prisma.$transaction(async (tx) => {
       const order = await tx.order.findUnique({
@@ -88,6 +88,8 @@ export class TicketsService {
             id: ticket.id,
             qr_code,
             first_name: item.first_name,
+            last_name: item.last_name,
+            is_minor: false,
             match_name: matchName,
             match_date: formattedDate,
             match_time: formattedTime,
@@ -117,10 +119,17 @@ export class TicketsService {
           },
         });
         if (qr_code) {
+          const parentItem = item.parent_order_item_id
+            ? adultItems.find(a => a.id === item.parent_order_item_id)
+            : null;
           qrTickets.push({
             id: '',
             qr_code,
             first_name: item.first_name,
+            last_name: item.last_name,
+            is_minor: true,
+            parent_first_name: parentItem?.first_name,
+            parent_last_name: parentItem?.last_name,
             match_name: matchName,
             match_date: formattedDate,
             match_time: formattedTime,
